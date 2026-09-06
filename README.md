@@ -1,4 +1,4 @@
-# stock_valuator
+# xbrlmetrics
 
 README as of 2026-08-26
 
