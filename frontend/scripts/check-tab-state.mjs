@@ -40,7 +40,7 @@ const BROWSER =
 const TAB_LABELS = {
   data: "Data",
   raw: "Raw Facts",
-  growth: "Growth (YoY)",
+  growth: "Growth",
   fundamentals: "Fundamentals",
   valuation: "Valuation",
   comparison: "Comparison",

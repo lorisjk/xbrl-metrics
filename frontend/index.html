@@ -4,7 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content=" computed directly from SEC EDGAR XBRL filings." />
+    <!-- The app's own intro paragraph (App.tsx's INTRO, app.py:837-841 verbatim). It
+         replaced " computed directly from SEC EDGAR XBRL filings." -- a sentence fragment
+         with a leading space, and, with an empty <div id="root"> under it, the only text a
+         crawler had to build a result snippet from.
+         `scripts/prerender.mjs` re-reads the same sentence off the rendered `.intro` and
+         writes it into dist/index.html, so a drift here shows up as a diff there rather
+         than as two descriptions that disagree. -->
+    <meta name="description" content="This pipeline fetches SEC EDGAR 10k and 10q filings of more than 600 companies, extracts the XBRL facts, computes derived metrics, and links them to yfinance course data. This data stream is as pure as possible." />
     <title>xbrlmetrics — S&P 500 fundamentals from SEC filings</title>
     <script defer src="https://analytics.xbrlmetrics.com/script.js" data-website-id="329c90cc-99f7-4751-b996-6c346994110a"></script>
   </head>

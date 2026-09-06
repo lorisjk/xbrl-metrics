@@ -1,4 +1,4 @@
-# stock_valuator
+# xbrlmetrics
 
 README as of 2026-08-26
 
@@ -78,8 +78,7 @@ parquet, never a chart file.
 
 ## The app
 
-`streamlit run app.py`. It is a **reader** only: it loads six parquet files and computes
-nothing. If a figure looks wrong, the bug is for sure upstream.
+`frontend`. It is a reader only, nothing computed here.
 
 **Analysis** — per ticker, six tabs:
 

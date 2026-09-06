@@ -1,0 +1,10 @@
+# There was no robots.txt: /robots.txt returned the SPA's index.html at 200,
+# so a crawler asking for crawl rules was handed a page of HTML instead.
+#
+# Everything here is public, computed from public SEC filings, so nothing is
+# disallowed. The sitemap line is the only instruction that carries information:
+# it names the four paths that are real URLs rather than hash fragments.
+User-agent: *
+Allow: /
+
+Sitemap: https://xbrlmetrics.com/sitemap.xml

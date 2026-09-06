@@ -112,6 +112,58 @@ export interface Location {
  */
 export const DEFAULT_LOCATION: Location = { view: "analysis", tab: "data", ticker: null };
 
+/**
+ * The three ticker-independent views that also exist as **real paths**, for the
+ * one reason paths exist here at all: a crawler that does not execute
+ * JavaScript cannot see a hash fragment, and `#/about` is not a distinct URL to
+ * it. `scripts/prerender.mjs` writes `dist/<path>/index.html` for each of these
+ * after `vite build`, capturing whatever the real component tree produced.
+ *
+ * **This does not make the app path-routed.** The hash stays the single source
+ * of truth for where you are, exactly as this module's docstring says --
+ * `formatHash` still writes a hash, `go()` still sets one, and nothing here
+ * pushes a path. The map is read once, at startup, and only to answer "which
+ * view did this visitor land on", which is the question a prerendered entry
+ * point creates and the hash cannot answer when there is no hash.
+ *
+ * Analysis is deliberately absent: it needs a ticker, there are 609 of them,
+ * and per-ticker prerendering is a different project.
+ */
+export const PATH_VIEWS: Readonly<Record<string, ViewId>> = {
+  "/about": "about",
+  "/encyclopedia": "encyclopedia",
+  "/coverage": "coverage",
+};
+
+/**
+ * The view a pathname names, or null.
+ *
+ * A trailing slash is the same page -- Caddy's `file_server` canonicalises
+ * `/about` to `/about/` when it serves a directory index, so both spellings
+ * genuinely reach this code.
+ */
+export function viewForPath(pathname: string): ViewId | null {
+  const trimmed = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return PATH_VIEWS[trimmed] ?? null;
+}
+
+/**
+ * Where a load lands, given both halves of the URL.
+ *
+ * **The hash wins whenever it names one.** A prerendered page is an entry
+ * point, not a route: `/about#/analysis/AAPL/valuation` is a link someone
+ * built deliberately, and the path is then just the door they came through.
+ * Only when the hash says nothing does the pathname get to speak -- which is
+ * exactly the case a search result produces, and the whole of what this
+ * function adds over `parseHash`.
+ */
+export function locationFrom(hash: string, pathname: string): Location {
+  const fromHash = parseHash(hash);
+  if (hash.replace(/^#\/?/, "") !== "") return fromHash;
+  const view = viewForPath(pathname);
+  return view ? { view, tab: DEFAULT_LOCATION.tab, ticker: null } : fromHash;
+}
+
 const isView = (v: string): v is ViewId => (VIEWS as readonly string[]).includes(v);
 const isTab = (v: string): v is TabId => (TABS as readonly string[]).includes(v);
 

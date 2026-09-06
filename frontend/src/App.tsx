@@ -44,6 +44,7 @@ import {
   TAB_LABELS,
   formatHash,
   isChartTab,
+  locationFrom,
   parseHash,
   tabDrawsFigure,
   withTab,
@@ -62,10 +63,22 @@ const INTRO =
   "the XBRL facts, computes derived metrics, and links them to yfinance course data. " +
   "This data stream is as pure as possible.";
 
-/** The URL hash is the single source of truth for where you are. */
+/**
+ * The URL hash is the single source of truth for where you are.
+ *
+ * With one addition, and only at startup: three of the four views are also
+ * **prerendered at real paths** (`/about`, `/encyclopedia`, `/coverage`), so a
+ * visitor can arrive from a search result with a pathname and no hash. Reading
+ * the pathname once, through `locationFrom`, is what stops that visitor seeing
+ * the static About content and then being thrown to the Analysis view the
+ * moment the bundle boots. The hash still wins whenever it names anything, and
+ * nothing below writes a path -- see `locationFrom`.
+ */
 function useLocation(): [Location, (next: Location) => void] {
   const read = () =>
-    typeof window === "undefined" ? DEFAULT_LOCATION : parseHash(window.location.hash);
+    typeof window === "undefined"
+      ? DEFAULT_LOCATION
+      : locationFrom(window.location.hash, window.location.pathname);
   const [location, setLocation] = useState<Location>(read);
 
   // Back/forward, and a hash pasted into the bar, both arrive here.

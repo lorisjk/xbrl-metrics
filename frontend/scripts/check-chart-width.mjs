@@ -46,7 +46,7 @@ const BROWSER =
 
 /** Landing tab -> chart tab. The first three are the ones that mount a chart hidden. */
 const ENTRY_TABS = ["data", "raw", "comparison", "valuation"];
-const CHART_TABS = ["Growth (YoY)", "Fundamentals", "Valuation"];
+const CHART_TABS = ["Growth", "Fundamentals", "Valuation"];
 
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const profile = mkdtempSync(join(tmpdir(), "chart-width-"));
