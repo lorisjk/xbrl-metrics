@@ -248,9 +248,21 @@ export default function DataTab({ ticker }: { ticker: string }) {
         EDGAR returned, what was derived from it, what was computed, and the latest state. Every
         table downloads at full precision.
       </p>
-      <p className="ticker-summary" data-ticker={ticker} style = {{fontSize : "14px", fontStyle: "oblique"}}>
+      {/*
+        * No wrapper element. `TickerSummary` already emits
+        * `<p class="ticker-summary" data-ticker="...">`, and wrapping that in a
+        * second `<p>` carrying the same class produced markup no HTML parser
+        * accepts: `document.documentElement.outerHTML` serialises the nested
+        * form faithfully, and re-parsing it -- which is what a crawler and any
+        * visitor of the prerendered file both do -- splits it into an **empty**
+        * `p.ticker-summary` followed by the real one. Measured: `[{len: 0},
+        * {len: 296}]`. That empty element is what `querySelector` would find
+        * first, and it is the selector the per-ticker prerender waits on.
+        *
+        * The wrapper's two declarations moved to `ticker-summary.css` unchanged,
+        * so the paragraph looks exactly as it did.
+        */}
       {registry && <TickerSummary registry={registry} ticker={ticker} />}
-      </p>
       <div className="controls">
         <label className="control">
           <input

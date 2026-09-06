@@ -33,6 +33,7 @@
  * deploying, so a missing browser or a hung page prints loudly and exits 0 with
  * the ordinary SPA in `dist/`.
  */
+import { readdirSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -80,6 +81,94 @@ const MAX_DESCRIPTION = 320;
  * find. A page that reaches its terminal state with nothing in it is a failure
  * worth shouting about, not worth writing to disk.
  */
+/**
+ * How many tickers get a static page of their own.
+ *
+ * 50, and it is not a natural break -- the measurement says so and the number
+ * is kept anyway. Ranks 50 and 51 (AXP and LIN) are **0.79%** apart; the only
+ * material gaps anywhere near are after rank 40 (PANW -> GEV, 9.69%) and rank
+ * 35 (MS -> PM, 8.38%). So this is a budget, not a cliff: it is the point past
+ * which "{ticker} revenue growth SEC" stops having search volume, which is a
+ * judgement about queries rather than about market capitalisation, and no
+ * number the data offers would express it better.
+ */
+const TICKER_PAGES = 50;
+
+/**
+ * The largest `n` tickers by market capitalisation, computed from the export on
+ * every build.
+ *
+ * **Computed, never a checked-in list**, on this project's standing preference
+ * -- `PROFILE_HIDDEN` is a negative list rather than a positive one, the
+ * raw-facts catalogue is derived from the candidates, the growth catalogue's
+ * visibility is derived from `get_concept_candidates`. A file of fifty tickers
+ * would be correct on the day it was written and quietly wrong a quarter later,
+ * and nothing would say so. This tracks the ranking for free.
+ *
+ * The cost is measured: 609 core files, 86.1 MB of JSON, **1.25 s** to parse
+ * all of them and pull one value out of each -- against 50 page loads in a
+ * headless browser, which is where the time actually goes. `market_cap` is read
+ * exactly as the pipeline published it in `current_snapshot`; nothing here
+ * recomputes it, and the 18 tickers that carry no market cap simply cannot rank.
+ */
+function topByMarketCap(n) {
+  const dir = path.join(DIST, "tickers");
+  const universe = JSON.parse(readFileSync(path.join(DIST, "universe.json"), "utf8"));
+  const profiles = new Map(universe.map((u) => [u.ticker, u.profile]));
+  const ranked = [];
+  for (const file of readdirSync(dir)) {
+    if (!file.endsWith(".json") || file.endsWith(".facts.json")) continue;
+    const ticker = file.slice(0, -".json".length);
+    const frame = JSON.parse(readFileSync(path.join(dir, file), "utf8")).frames.current_snapshot;
+    if (!frame?.data?.length) continue;
+    const ci = frame.columns.indexOf("concept");
+    const vi = frame.columns.indexOf("value");
+    for (let i = 0; i < frame.data[ci].length; i += 1) {
+      if (frame.data[ci][i] !== "market_cap") continue;
+      const value = frame.data[vi][i];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        ranked.push({ ticker, profile: profiles.get(ticker) ?? "", marketCap: value });
+      }
+      break;
+    }
+  }
+  ranked.sort((a, b) => b.marketCap - a.marketCap);
+  return ranked.slice(0, n);
+}
+
+/**
+ * One route per top-50 ticker: the Data tab, at `/ticker/<TICKER>`.
+ *
+ * **Two selectors to wait on, not one**, which is the two-tier pattern the
+ * three reference pages already use -- settle, then confirm not empty. The
+ * difference here is that the two things settle *independently*: the summary
+ * comes from the ticker's core file and the raw/derived table from
+ * `facts_full`, which `DataTab` fetches separately and shows "Loading the facts
+ * frame…" for. Waiting only on the summary would capture that placeholder.
+ *
+ * `p.ticker-summary[data-ticker="X"]` is the marker the summary cycle handed
+ * over, with the ticker predicate it asked for: `useTickerFrames` reports a
+ * result for a different ticker as "still loading", so the attribute is what
+ * separates "this company's summary has rendered" from "the previous one is
+ * still on screen".
+ */
+const tickerRoute = ({ ticker, profile }) => ({
+  path: `/ticker/${ticker}`,
+  ticker,
+  ready: [`p.ticker-summary[data-ticker="${ticker}"]`, ".data-tab table.data-table tbody tr"],
+  content: ".data-tab table.data-table tbody tr",
+  lede: `p.ticker-summary[data-ticker="${ticker}"]`,
+  // The title is assembled rather than read from an `<h2>`, because the Data
+  // tab has no heading naming the company and the export carries no company
+  // names at all (`universe.json` is `{ticker, profile, n_*}`). Both halves are
+  // the sidebar's own two strings in the sidebar's own order -- "AAPL —
+  // standard" -- and the ticker half is checked against the rendered
+  // `data-ticker` before the file is written, so it is verified against the
+  // page even though it is not scraped from it.
+  titleFrom: null,
+  title: `${ticker} — ${profile} — ${SITE_NAME}`,
+});
+
 const ROUTES = [
   {
     // The homepage, and the one the reported symptom names: `curl
@@ -142,24 +231,39 @@ function description(raw) {
 /**
  * `sitemap.xml`, written whether or not the browser was available.
  *
- * Every prerendered path, absolute against SITE -- the homepage and the three
- * reference pages. The
- * 609 per-ticker views are deliberately absent: they are hash fragments
+ * Every prerendered path, absolute against SITE -- the homepage, the three
+ * reference pages and the top-50 ticker pages. The other 559 tickers are
+ * deliberately absent: they are reachable only as hash fragments
  * (`#/analysis/AAPL/data`), which are not distinct URLs to a crawler, so
- * listing them would be listing the homepage four hundred times.
+ * listing them would be listing the homepage five hundred times.
  */
-async function writeSitemap() {
+async function writeSitemap(routes) {
   const lastmod = new Date().toISOString().slice(0, 10);
-  const urls = ROUTES.map((r) => r.path)
+  const urls = routes.map((r) => r.path)
     .map((p) => `  <url>\n    <loc>${SITE}${p}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`)
     .join("\n");
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
   await writeFile(path.join(DIST, "sitemap.xml"), xml, "utf8");
-  log(`sitemap.xml — ${ROUTES.length} urls, lastmod ${lastmod}`);
+  log(`sitemap.xml — ${routes.length} urls, lastmod ${lastmod}`);
 }
 
 async function main() {
-  await writeSitemap();
+  let tickers = [];
+  try {
+    const t0 = Date.now();
+    tickers = topByMarketCap(TICKER_PAGES);
+    log(`top ${tickers.length} by market cap in ${Date.now() - t0} ms — ` +
+        `${tickers[0]?.ticker} ${(tickers[0]?.marketCap / 1e9).toFixed(0)}B … ` +
+        `${tickers.at(-1)?.ticker} ${(tickers.at(-1)?.marketCap / 1e9).toFixed(0)}B`);
+  } catch (error) {
+    // The ranking is an optimisation of *which* pages exist, not a
+    // prerequisite for any of them: losing it costs the 50 ticker pages and
+    // leaves the four that do not depend on it.
+    log("no ticker pages — could not rank the export:", error.message);
+  }
+  const routes = [...ROUTES, ...tickers.map(tickerRoute)];
+
+  await writeSitemap(routes);
 
   let puppeteer;
   try {
@@ -195,8 +299,8 @@ async function main() {
   const failures = [];
   // The three pages first, then the homepage: its link list is labelled with
   // their own headings, so it cannot be written until they have been read.
-  const pages = ROUTES.filter((r) => !r.links);
-  const home = ROUTES.filter((r) => r.links);
+  const pages = routes.filter((r) => !r.links);
+  const home = routes.filter((r) => r.links);
   const headings = new Map();
 
   try {
@@ -205,8 +309,11 @@ async function main() {
       const problems = [];
       page.on("pageerror", (e) => problems.push(String(e)));
       try {
-        await page.goto(`${base}${route.path}`, { waitUntil: "networkidle0", timeout: 30_000 });
-        await page.waitForSelector(route.ready, { timeout: 30_000 });
+        await page.goto(`${base}${route.path}`, { waitUntil: "networkidle0", timeout: 45_000 });
+        // A list where two things settle independently -- see `tickerRoute`.
+        for (const selector of [route.ready].flat()) {
+          await page.waitForSelector(selector, { timeout: 45_000 });
+        }
 
         const found = await page.$$eval(route.content, (nodes) => nodes.length);
         if (found === 0) throw new Error(`reached ${route.ready} but ${route.content} is empty`);
@@ -221,17 +328,29 @@ async function main() {
                 heading: sel.titleFrom
                   ? (view?.querySelector(sel.titleFrom)?.textContent?.trim() ?? "")
                   : null,
-                lede: view?.querySelector(sel.lede)?.textContent ?? "",
+                // Document level: every `lede` selector is unique in the page,
+                // and a ticker page's lede *is* its ready element rather than a
+                // descendant of it, which a scoped query could never match.
+                lede: document.querySelector(sel.lede)?.textContent ?? "",
+                onPage: sel.ticker
+                  ? (document.querySelector("p.ticker-summary")?.dataset.ticker ?? null)
+                  : null,
               };
             },
-            { ready: route.ready, lede: route.lede, titleFrom: route.titleFrom ?? null },
+            { ready: [route.ready].flat()[0], lede: route.lede,
+              titleFrom: route.titleFrom ?? null, ticker: route.ticker ?? null },
           );
           if (route.titleFrom && !meta.heading) {
             throw new Error(`no ${route.titleFrom} inside ${route.ready}`);
           }
           if (!meta.lede.trim()) throw new Error(`no text in ${route.lede}`);
+          // A page that rendered a different company is a failure, not a file:
+          // the title would name one ticker and the sentences another.
+          if (route.ticker && meta.onPage !== route.ticker) {
+            throw new Error(`rendered ${meta.onPage}, expected ${route.ticker}`);
+          }
           if (meta.heading) headings.set(route.path, meta.heading);
-          title = meta.heading ? `${meta.heading} — ${SITE_NAME}` : null;
+          title = route.title ?? (meta.heading ? `${meta.heading} — ${SITE_NAME}` : null);
           desc = description(meta.lede);
 
           // Written into the captured document only. The live app never sets
@@ -312,8 +431,15 @@ ${document.documentElement.outerHTML}`,
     await server.close();
   }
 
+  log(`${routes.length - failures.length} of ${routes.length} routes prerendered`);
   if (failures.length) {
-    log(`${failures.length} of ${ROUTES.length} routes not prerendered; dist/ still serves the SPA for them.`);
+    // Isolation, stated: one ticker failing costs that ticker's static page and
+    // nothing else. The path is not a dead link -- there is simply no file at
+    // it, so `try_files` falls through to `/index.html`, the SPA boots,
+    // `locationFrom` reads `/ticker/<T>` and shows that ticker's Data tab.
+    // Which is exactly how the other 559 tickers work today.
+    log(`${failures.length} route(s) fell back to the interactive shell:`);
+    for (const f of failures) log(`  ${f}`);
   }
 }
 
