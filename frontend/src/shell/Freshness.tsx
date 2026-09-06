@@ -11,17 +11,18 @@
  * schema 2 while `main.py` writes 4, and a silent caption would hide that.
  */
 import { META_SCHEMA, type Meta } from "../contracts.ts";
+import { runDate } from "./provenance.ts";
 
 export default function Freshness({ meta }: { meta: Meta | null }) {
   if (!meta) {
     return <p className="caption">Run provenance unavailable — meta.json was not readable.</p>;
   }
-  const runDate = (meta.run_start ?? "").slice(0, 10);
+  const date = runDate(meta);
   const stale = meta.schema !== undefined && meta.schema !== META_SCHEMA;
   return (
     <div className="freshness">
       <p className="caption">
-        <strong>Data as of {runDate || "unknown"}</strong>
+        <strong>Data as of {date || "unknown"}</strong>
         <br />
         {meta.tickers_with_data ?? "?"} of {meta.tickers_requested ?? "?"} tickers produced data
         <br />

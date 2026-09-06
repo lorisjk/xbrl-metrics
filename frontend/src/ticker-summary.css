@@ -1,0 +1,14 @@
+/*
+ * The summary is prose, so it is sized and spaced like the intro paragraph
+ * above it rather than like a caption -- one readable measure, no card, no
+ * border, nothing that reads as a widget. It is the first thing in
+ * `.content__body`, above every tab's content and outside the sticky header --
+ * see `App.tsx` for the measurement behind that.
+ */
+.ticker-summary {
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0 0 1.2rem;
+  max-width: fit-content;
+  color: var(--shell-text);
+}

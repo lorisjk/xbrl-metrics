@@ -50,6 +50,7 @@ import {
   type Pivot,
 } from "./pivot.ts";
 import "./data-tab.css";
+import TickerSummary from "../TickerSummary.tsx";
 
 /**
  * One section: heading, its caption, the count line, the table, the download.
@@ -247,7 +248,9 @@ export default function DataTab({ ticker }: { ticker: string }) {
         EDGAR returned, what was derived from it, what was computed, and the latest state. Every
         table downloads at full precision.
       </p>
-
+      <p className="ticker-summary" data-ticker={ticker} style = {{fontSize : "14px", fontStyle: "oblique"}}>
+      {registry && <TickerSummary registry={registry} ticker={ticker} />}
+      </p>
       <div className="controls">
         <label className="control">
           <input
