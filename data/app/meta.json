@@ -1,7 +1,7 @@
 {
   "schema": 4,
-  "run_start": "2026-09-06T08:00:08",
-  "exported_at": "2026-09-06T08:10:17",
+  "run_start": "2026-09-07T08:30:34",
+  "exported_at": "2026-09-07T08:45:28",
   "period": "quarterly",
   "tickers_requested": 610,
   "tickers_with_data": 607,
@@ -34,7 +34,7 @@
     "directory": "tickers",
     "tickers": 607,
     "files": 1214,
-    "bytes": 193533325,
+    "bytes": 193533430,
     "core_frames": [
       "metrics_long",
       "valuation_history",

@@ -333,3 +333,7 @@
   font-size: 0.95em;
   color: var(--shell-text);
 }
+
+.data-tab > p.ticker-summary {
+  font-size: 14px;
+}

@@ -148,11 +148,48 @@ export function viewForPath(pathname: string): ViewId | null {
 }
 
 /**
+ * `/ticker/<TICKER>` -- the one path shape that carries a parameter.
+ *
+ * A prefix test and an extraction rather than a fourth entry in `PATH_VIEWS`,
+ * because the 50 prerendered ticker pages are chosen by market cap at build
+ * time and change from night to night: a fixed record would have to be
+ * regenerated into source, which is the hand-maintained list this project
+ * removes wherever it finds one. Nothing here knows *which* tickers have a
+ * static page, and nothing needs to -- a ticker without one falls through to
+ * the SPA shell and works exactly as the other 559 do today.
+ */
+export const TICKER_PATH_PREFIX = "/ticker/";
+
+/**
+ * The ticker a pathname names, or null.
+ *
+ * **An unrecognised suffix is `null`, not a normalisation.** `/ticker/AAPL/valuation`
+ * returns null and lands on the default location, which is precisely what
+ * `/about/extra` already does -- the round-trip suite has asserted that since
+ * the prerender cycle, and inventing a second rule for the parameterised shape
+ * would mean two answers to "what does an unknown path do".
+ *
+ * Case is normalised upward for the reason `parseHash` gives: the export's
+ * filenames are uppercase. Whether the ticker exists is the caller's question,
+ * not this function's -- it has no universe to check against, and a
+ * `/ticker/NOPE` that reaches the app gets the per-ticker fetch's own message.
+ */
+export function tickerForPath(pathname: string): string | null {
+  if (!pathname.startsWith(TICKER_PATH_PREFIX)) return null;
+  const rest = pathname.slice(TICKER_PATH_PREFIX.length).replace(/\/+$/, "");
+  if (rest === "" || rest.includes("/")) return null;
+  return decodeURIComponent(rest).toUpperCase();
+}
+
+/**
  * Where a load lands, given both halves of the URL.
  *
  * **The hash wins whenever it names one.** A prerendered page is an entry
  * point, not a route: `/about#/analysis/AAPL/valuation` is a link someone
  * built deliberately, and the path is then just the door they came through.
+ * That holds unchanged for the parameterised shape --
+ * `/ticker/AAPL#/analysis/MSFT/valuation` gives MSFT's valuation chart, one
+ * more door into the same rule rather than a second rule.
  * Only when the hash says nothing does the pathname get to speak -- which is
  * exactly the case a search result produces, and the whole of what this
  * function adds over `parseHash`.
@@ -161,7 +198,14 @@ export function locationFrom(hash: string, pathname: string): Location {
   const fromHash = parseHash(hash);
   if (hash.replace(/^#\/?/, "") !== "") return fromHash;
   const view = viewForPath(pathname);
-  return view ? { view, tab: DEFAULT_LOCATION.tab, ticker: null } : fromHash;
+  if (view) return { view, tab: DEFAULT_LOCATION.tab, ticker: null };
+  // Second, and only because the first found nothing: the two shapes cannot
+  // collide -- `PATH_VIEWS` holds three literal paths and none of them begins
+  // `/ticker/` -- so this is an added branch rather than a change to the
+  // existing one, and the assertions on that one are untouched.
+  const ticker = tickerForPath(pathname);
+  if (ticker) return { view: "analysis", tab: DEFAULT_LOCATION.tab, ticker };
+  return fromHash;
 }
 
 const isView = (v: string): v is ViewId => (VIEWS as readonly string[]).includes(v);

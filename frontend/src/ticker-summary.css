@@ -1,0 +1,19 @@
+/*
+ * The summary is prose, so it is sized and spaced like the intro paragraph
+ * above it rather than like a caption -- one readable measure, no card, no
+ * border, nothing that reads as a widget. It sits at the top of the Data tab,
+ * under that tab's opening line -- which is also the tab the per-ticker static
+ * pages capture, so this paragraph is the first prose about the company that a
+ * crawler reads.
+ */
+.ticker-summary {
+  /* 14px and oblique came from the wrapper element this paragraph used to sit
+     inside; see DataTab.tsx for why that wrapper is gone and the declarations
+     are here. */
+  font-size: 14px;
+  font-style: oblique;
+  line-height: 1.5;
+  margin: 0 0 1.2rem;
+  max-width: fit-content;
+  color: var(--shell-text);
+}
