@@ -74,25 +74,23 @@ For buisness inquiries, please contact: kyhestlo.mail@gmail.com
 Angaben gemäß § 5 DDG
 
 Loris-Joona Köhn
-Birkenhof 3
 15831 Mahlow
 Deutschland
 
 Kontakt
 E-Mail: kyhestlo.mail@gmail.com
 
-Verantwortlich für den Inhalt: Loris-Joona Köhn, Birkenhof 3, 15831 Mahlow
+Verantwortlich für den Inhalt: Loris-Joona Köhn, 15831 Mahlow
 
 ## Privacy
 
 **No accounts, no tracking, no advertising.** This site requires no registration and
 sets no tracking or advertising cookies. It does not embed third-party analytics.
 
-**Cookies.** One technically necessary cookie (_streamlit_xsrf) is set by the application framework to
-maintain the connection between your browser and the server. It contains no personal
-information, is not used to recognise you across visits, and is discarded when you
-close the tab. No consent banner is shown because no cookie beyond this technical
-minimum is used.
+**Cookies.** This site sets no cookies. The update notice's dismissal state and any
+in-session preferences are kept in your browser's local session storage, which is
+never sent to the server and is cleared automatically when you close the tab. No
+consent banner is shown because there is nothing here that requires one.
 
 **What the server records.** This site does not keep access logs. The web server is
 configured without request logging, so visits are not recorded and no IP addresses are
