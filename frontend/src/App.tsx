@@ -55,7 +55,7 @@ import {
 import "./shell/shell.css";
 
 /** app.py:816 — the page name, carried so the two apps answer to one thing. */
-const APP_TITLE = "Kyhestlo";
+const APP_TITLE = "XBRL Metrics";
 
 /** app.py:837-841, verbatim. */
 const INTRO =
