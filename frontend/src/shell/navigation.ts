@@ -7,18 +7,43 @@
  * rules are checkable from Node -- which is most of what is checkable about a
  * shell at all.
  *
- * **The location lives in the URL hash.** A link to one ticker's valuation
- * chart is a real thing to want, and retrofitting it later means touching every
- * component that holds a piece of the location. The hash rather than a path is
- * deliberate: `load.ts` already documents that a dev/preview server answers an
- * unknown path with `index.html` rather than a 404, so a path-based route would
- * need server rewrites to work on a static host, and the hash needs none.
+ * **The location lives in the URL path.** It lived in the hash from the shell
+ * cycle until this one, for a reason that was true when it was written and has
+ * since expired: a hash needs no server rewrites, and `load.ts` documents that
+ * a dev/preview server answers an unknown path with `index.html` rather than a
+ * 404 -- but the *production* server was an open question then. It is not now.
+ * The prerender cycle established `try_files {path} {path}/index.html
+ * /index.html` and the ticker-pages cycle put 54 paths through it; the same
+ * wildcard fallback that serves `/about` and `/ticker/AAPL` serves
+ * `/analysis/AAPL/growth` without a new directive, because the fallback is
+ * precisely what answers a path with no file behind it.
+ *
+ * Three things the hash cost, all measured rather than assumed:
+ *
+ *   1. **A crawler does not treat `#/analysis/AAPL/growth` as a distinct URL.**
+ *      The last two cycles built four kinds of real path, one pattern at a
+ *      time, to route around exactly this. This generalises the fix instead of
+ *      adding a fifth special case the next time a page has to be crawlable.
+ *   2. **Umami tracks a pageview on `pushState`/`replaceState`, and on nothing
+ *      else.** Its tracker wraps those two methods and never listens for
+ *      `hashchange` (analytics.xbrlmetrics.com/script.js, read and then watched
+ *      in a browser), so every ticker switch this app has ever made was
+ *      invisible to the dashboard. Writing a path makes them visible **with no
+ *      tracking call of our own** -- see `formatPath`.
+ *   3. **A shared link previews worse.** A preview generator that reads only the
+ *      path never saw the ticker at all.
  *
  * What is **not** in the URL: the metric selection and the window. They are
  * per-chart, high-cardinality, and would turn a shareable link into a
- * paragraph. Adding them later is a change to `parseHash`/`formatHash` and to
+ * paragraph. Adding them later is a change to `parsePath`/`formatPath` and to
  * where that state lives -- see the report; today it is inside `ChartView`,
  * which would have to be lifted first.
+ *
+ * `parseHash` survives, and only as the **legacy reader**: a
+ * `#/analysis/AAPL/growth` posted before this shipped must still land on the
+ * right page. `formatHash` does not survive -- nothing writes a hash any more,
+ * and a writer with no caller is a second grammar waiting to drift from this
+ * one.
  */
 
 export const VIEWS = ["analysis", "encyclopedia", "coverage", "about"] as const;
@@ -113,21 +138,21 @@ export interface Location {
 export const DEFAULT_LOCATION: Location = { view: "analysis", tab: "data", ticker: null };
 
 /**
- * The three ticker-independent views that also exist as **real paths**, for the
- * one reason paths exist here at all: a crawler that does not execute
- * JavaScript cannot see a hash fragment, and `#/about` is not a distinct URL to
- * it. `scripts/prerender.mjs` writes `dist/<path>/index.html` for each of these
- * after `vite build`, capturing whatever the real component tree produced.
+ * The three ticker-independent views that exist as literal, parameterless paths.
  *
- * **This does not make the app path-routed.** The hash stays the single source
- * of truth for where you are, exactly as this module's docstring says --
- * `formatHash` still writes a hash, `go()` still sets one, and nothing here
- * pushes a path. The map is read once, at startup, and only to answer "which
- * view did this visitor land on", which is the question a prerendered entry
- * point creates and the hash cannot answer when there is no hash.
+ * They were built by the prerender cycle as *entry points* -- a crawler that
+ * does not execute JavaScript cannot see a hash fragment, so `#/about` is not a
+ * distinct URL to it, and `scripts/prerender.mjs` writes `dist/<path>/index.html`
+ * for each of these after `vite build`.
  *
- * Analysis is deliberately absent: it needs a ticker, there are 609 of them,
- * and per-ticker prerendering is a different project.
+ * **They are now also what the app writes.** That is the whole of what changed
+ * here: the map used to be read once at startup, to answer "which view did this
+ * visitor land on", and `formatHash` wrote a hash on every click. Now
+ * `formatPath` writes these same three strings, so the URL a visitor arrives at
+ * and the URL a click produces are one vocabulary rather than two.
+ *
+ * Analysis is deliberately absent: it carries a ticker and a tab, which is a
+ * grammar rather than a lookup -- see `formatPath`.
  */
 export const PATH_VIEWS: Readonly<Record<string, ViewId>> = {
   "/about": "about",
@@ -136,118 +161,258 @@ export const PATH_VIEWS: Readonly<Record<string, ViewId>> = {
 };
 
 /**
- * The view a pathname names, or null.
+ * A trailing slash is the same page.
  *
- * A trailing slash is the same page -- Caddy's `file_server` canonicalises
- * `/about` to `/about/` when it serves a directory index, so both spellings
- * genuinely reach this code.
+ * Caddy's `file_server` canonicalises `/about` to `/about/` when it serves a
+ * directory index, so both spellings genuinely reach this code -- and now that
+ * the app pushes paths of its own, `/analysis/AAPL/growth/` typed by hand has
+ * to mean the same thing too. One helper, used by every path rule below.
  */
+const trimPath = (pathname: string) =>
+  pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+
+/**
+ * `decodeURIComponent` that cannot take the app down.
+ *
+ * A malformed escape (`/analysis/%zz/data`, which a crawler or a truncated
+ * paste produces for free) makes `decodeURIComponent` throw a `URIError`, and
+ * this runs inside `useState`'s initialiser -- an exception there is a white
+ * screen, not a wrong page. The hash reader has had this hole since the shell
+ * cycle and it never mattered much, because a hash is not something a server
+ * hands you; a pathname is. Falling back to the raw segment is the same answer
+ * the rest of this module gives to anything it does not recognise.
+ */
+function decodeSegment(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/** The view a pathname names, or null. */
 export function viewForPath(pathname: string): ViewId | null {
-  const trimmed = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  return PATH_VIEWS[trimmed] ?? null;
+  return PATH_VIEWS[trimPath(pathname)] ?? null;
 }
 
 /**
- * `/ticker/<TICKER>` -- the one path shape that carries a parameter.
+ * `/ticker/<TICKER>` -- the shape the ticker-pages cycle prerendered, kept as a
+ * **read-only alias** for `/analysis/<TICKER>/data`.
  *
- * A prefix test and an extraction rather than a fourth entry in `PATH_VIEWS`,
- * because the 50 prerendered ticker pages are chosen by market cap at build
- * time and change from night to night: a fixed record would have to be
- * regenerated into source, which is the hand-maintained list this project
- * removes wherever it finds one. Nothing here knows *which* tickers have a
- * static page, and nothing needs to -- a ticker without one falls through to
- * the SPA shell and works exactly as the other 559 do today.
+ * The two are the same state reached two ways, and this cycle had to decide
+ * which one wins. It is not unified away, and not rewritten on arrival, for one
+ * measured reason: `/ticker/<T>` is the URL that has a real file behind it --
+ * fifty of them, listed in `sitemap.xml`, each carrying the ticker summary and
+ * the data table as server-served HTML. `replaceState`-ing a visitor from
+ * `/ticker/NVDA` to `/analysis/NVDA/data` would move them off the only ticker
+ * URL that previews, which is the property the last two cycles were built to
+ * create.
+ *
+ * The reverse unification -- having `formatPath` *emit* `/ticker/<T>` for the
+ * fifty tickers that have a page -- is not available, and for a reason this
+ * module already states: the fifty are chosen by market capitalisation at build
+ * time and change from night to night, so nothing here knows which they are,
+ * and a checked-in list of them is exactly the hand-maintained file this project
+ * removes wherever it finds one.
+ *
+ * So: **the app never writes this shape, and always accepts it.** One writer,
+ * two readers. A click from a prerendered ticker page moves to
+ * `/analysis/<T>/<tab>` and stays in that vocabulary from then on.
  */
 export const TICKER_PATH_PREFIX = "/ticker/";
 
 /**
- * The ticker a pathname names, or null.
+ * The ticker a `/ticker/...` pathname names, or null.
  *
  * **An unrecognised suffix is `null`, not a normalisation.** `/ticker/AAPL/valuation`
  * returns null and lands on the default location, which is precisely what
  * `/about/extra` already does -- the round-trip suite has asserted that since
- * the prerender cycle, and inventing a second rule for the parameterised shape
- * would mean two answers to "what does an unknown path do".
+ * the prerender cycle. The analysis grammar is where a tab belongs.
  *
- * Case is normalised upward for the reason `parseHash` gives: the export's
- * filenames are uppercase. Whether the ticker exists is the caller's question,
- * not this function's -- it has no universe to check against, and a
- * `/ticker/NOPE` that reaches the app gets the per-ticker fetch's own message.
+ * Case is normalised upward because the export's filenames are uppercase.
+ * Whether the ticker exists is the caller's question, not this function's -- it
+ * has no universe to check against, and a `/ticker/NOPE` that reaches the app
+ * gets the per-ticker fetch's own message.
  */
 export function tickerForPath(pathname: string): string | null {
   if (!pathname.startsWith(TICKER_PATH_PREFIX)) return null;
   const rest = pathname.slice(TICKER_PATH_PREFIX.length).replace(/\/+$/, "");
   if (rest === "" || rest.includes("/")) return null;
-  return decodeURIComponent(rest).toUpperCase();
-}
-
-/**
- * Where a load lands, given both halves of the URL.
- *
- * **The hash wins whenever it names one.** A prerendered page is an entry
- * point, not a route: `/about#/analysis/AAPL/valuation` is a link someone
- * built deliberately, and the path is then just the door they came through.
- * That holds unchanged for the parameterised shape --
- * `/ticker/AAPL#/analysis/MSFT/valuation` gives MSFT's valuation chart, one
- * more door into the same rule rather than a second rule.
- * Only when the hash says nothing does the pathname get to speak -- which is
- * exactly the case a search result produces, and the whole of what this
- * function adds over `parseHash`.
- */
-export function locationFrom(hash: string, pathname: string): Location {
-  const fromHash = parseHash(hash);
-  if (hash.replace(/^#\/?/, "") !== "") return fromHash;
-  const view = viewForPath(pathname);
-  if (view) return { view, tab: DEFAULT_LOCATION.tab, ticker: null };
-  // Second, and only because the first found nothing: the two shapes cannot
-  // collide -- `PATH_VIEWS` holds three literal paths and none of them begins
-  // `/ticker/` -- so this is an added branch rather than a change to the
-  // existing one, and the assertions on that one are untouched.
-  const ticker = tickerForPath(pathname);
-  if (ticker) return { view: "analysis", tab: DEFAULT_LOCATION.tab, ticker };
-  return fromHash;
+  return decodeSegment(rest).toUpperCase();
 }
 
 const isView = (v: string): v is ViewId => (VIEWS as readonly string[]).includes(v);
 const isTab = (v: string): v is TabId => (TABS as readonly string[]).includes(v);
 
+/** The prefix the Analysis grammar hangs off. */
+export const ANALYSIS_PATH_PREFIX = "/analysis";
+
 /**
- * `#/analysis/AAPL/valuation` -> a Location. Unknown parts fall back rather
- * than throwing: a hand-edited or stale URL should land somewhere sensible,
- * not on an error page.
+ * `/analysis/AAPL/growth` -> a Location.
+ *
+ * The direct translation of `parseHash`, segment for segment, with one
+ * difference the hash never had to solve: **a path should not carry an empty
+ * segment.** `formatHash` wrote "no ticker chosen" as `#/analysis//growth` --
+ * deliberately, so the URL never claims a ticker the reader did not pick -- and
+ * `/analysis//growth` is a shape a server may normalise, merge or redirect
+ * before the app ever sees it. So the ticker segment is *omitted* in that case
+ * and the tab stands alone: `/analysis/growth`.
+ *
+ * That makes one position ambiguous, and it is resolved by a closed set rather
+ * than by a guess. `TABS` is six lowercase words; a ticker is uppercased on the
+ * way in, and the export has 609 of them, **none** of which is one of those six
+ * (checked -- the only ticker in the universe that is not plain `[A-Z]` is
+ * `BF-B`). So `/analysis/growth` is the growth tab with no ticker and
+ * `/analysis/GROWTH` would be a ticker named GROWTH, and neither can shadow the
+ * other. The double-slash spelling still parses, for the case where something
+ * upstream produces it anyway.
+ *
+ * Everything unrecognised is `DEFAULT_LOCATION`, which is the one rule this
+ * module has always had for a URL it cannot read.
+ */
+function parseAnalysisPath(trimmed: string): Location | null {
+  if (trimmed === ANALYSIS_PATH_PREFIX) return DEFAULT_LOCATION;
+  if (!trimmed.startsWith(`${ANALYSIS_PATH_PREFIX}/`)) return null;
+  const rest = trimmed.slice(ANALYSIS_PATH_PREFIX.length + 1).split("/").map(decodeSegment);
+  if (rest.length === 1) {
+    const [only] = rest;
+    if (isTab(only)) return { view: "analysis", tab: only, ticker: null };
+    return { view: "analysis", tab: DEFAULT_LOCATION.tab, ticker: only.toUpperCase() || null };
+  }
+  if (rest.length === 2) {
+    const [rawTicker, rawTab] = rest;
+    return {
+      view: "analysis",
+      tab: isTab(rawTab) ? rawTab : DEFAULT_LOCATION.tab,
+      ticker: rawTicker ? rawTicker.toUpperCase() : null,
+    };
+  }
+  return DEFAULT_LOCATION;
+}
+
+/**
+ * A pathname -> a Location. Total: every string lands somewhere.
+ *
+ * The order is the order the shapes were built in, and they cannot collide --
+ * `PATH_VIEWS` holds three literals, none of them beginning `/ticker/` or
+ * `/analysis`, and the ticker alias is a single segment under its own prefix.
+ * So this reads as three independent rules and a fallback rather than a
+ * precedence chain that has to be reasoned about.
+ */
+export function parsePath(pathname: string): Location {
+  const trimmed = trimPath(pathname);
+  const view = PATH_VIEWS[trimmed];
+  if (view) return { view, tab: DEFAULT_LOCATION.tab, ticker: null };
+  const ticker = tickerForPath(pathname);
+  if (ticker) return { view: "analysis", tab: DEFAULT_LOCATION.tab, ticker };
+  return parseAnalysisPath(trimmed) ?? DEFAULT_LOCATION;
+}
+
+/**
+ * A Location -> the path it round-trips through. The inverse of `parsePath`,
+ * and the only expression in the app that builds a URL.
+ *
+ * **`/` for the default location**, not `/analysis/data`: `/` is the homepage,
+ * it is prerendered, and it is what a visitor who has chosen nothing is looking
+ * at. Emitting a canonical spelling for it would rewrite the address bar on the
+ * front page and gain nothing.
+ *
+ * The non-Analysis views carry neither ticker nor tab, so the URL cannot
+ * express "the About page, for AAPL" -- the same reason app.py hides the ticker
+ * selector on those views (app.py:872), and the same shape `formatHash` had.
+ *
+ * **Nothing here calls an analytics function.** Umami's tracker wraps
+ * `history.pushState`, so the pageview happens because the URL changed, in the
+ * one place the URL changes. An explicit `umami.track()` beside the `pushState`
+ * in `App.tsx` would be counted twice -- measured in a browser, not reasoned
+ * about; see the report.
+ */
+export function formatPath(location: Location): string {
+  if (location.view !== "analysis") return `/${location.view}`;
+  if (location.ticker === null) {
+    return location.tab === DEFAULT_LOCATION.tab ? "/" : `${ANALYSIS_PATH_PREFIX}/${location.tab}`;
+  }
+  return `${ANALYSIS_PATH_PREFIX}/${encodeURIComponent(location.ticker)}/${location.tab}`;
+}
+
+/** Two locations naming the same place. Used to suppress no-op history entries. */
+export const sameLocation = (a: Location, b: Location) =>
+  a.view === b.view && a.tab === b.tab && a.ticker === b.ticker;
+
+const hasLegacyHash = (hash: string) => hash.replace(/^#\/?/, "") !== "";
+
+/**
+ * Where a load lands, given both halves of the URL.
+ *
+ * **The hash still wins whenever it names one**, and that is the prerender
+ * cycle's precedence rule surviving verbatim rather than being restated. What
+ * changed is what it is *for*. It used to mean "a prerendered page is an entry
+ * point, not a route": the path said which door you came through and the hash
+ * said where you actually were. Now the path is the route, and a hash can only
+ * be a link written before this shipped -- so "the hash wins" has become "an old
+ * link still goes where it always went", and `legacyPath` turns it into the
+ * equivalent path so the old form is never bookmarked forward.
+ *
+ * The rule is unchanged in every case it was asserted on:
+ * `/about#/analysis/AAPL/valuation` still gives AAPL's valuation chart and
+ * `/ticker/AAPL#/analysis/MSFT/valuation` still gives MSFT's -- the address bar
+ * now agrees with the answer instead of contradicting it.
+ */
+export function locationFrom(hash: string, pathname: string): Location {
+  if (hasLegacyHash(hash)) return parseHash(hash);
+  return parsePath(pathname);
+}
+
+/**
+ * The path a legacy `#/...` URL should be rewritten to, or null when there is
+ * no hash to convert.
+ *
+ * **The conversion is total, not best-effort.** `parseHash` is total by
+ * construction -- an unknown view, an unknown tab and a missing segment each
+ * fall back rather than throwing -- and `formatPath` is total over `Location`.
+ * So every string that can follow `#` produces a path, including the ones that
+ * were never routes: `#/nonsense` parses to the default location and converts to
+ * `/`, which is where it already went.
+ *
+ * The query string is carried across. It is not part of the location and
+ * nothing in the app reads it, but dropping it would silently discard a campaign
+ * parameter or a cache-buster the visitor arrived with.
+ *
+ * A pure function rather than the `replaceState` call itself, so the conversion
+ * table is checkable from Node over every hash shape the old grammar could
+ * produce.
+ */
+export function legacyPath(hash: string, search: string): string | null {
+  if (!hasLegacyHash(hash)) return null;
+  return `${formatPath(parseHash(hash))}${search}`;
+}
+
+/**
+ * `#/analysis/AAPL/valuation` -> a Location. **Legacy only**: nothing writes
+ * this grammar any more, and its one caller is the boot-time conversion in
+ * `App.tsx`. Unknown parts fall back rather than throwing, which is what makes
+ * that conversion total.
  *
  * Ticker case is normalised upward because the export's filenames are
  * uppercase; whether the ticker actually exists is the caller's question, not
  * this function's -- it has no universe to check against.
  *
- * **Empty segments are kept.** The hash is positional, and "no ticker" is a
- * real state -- `formatHash` writes it as `#/analysis//valuation` rather than
+ * **Empty segments are kept.** The hash was positional, and "no ticker" was a
+ * real state -- `formatHash` wrote it as `#/analysis//valuation` rather than
  * rewriting the URL with a ticker the user did not choose. Dropping empties
  * here would shift the tab into the ticker's place and read `#/analysis//data`
- * as ticker `DATA`; the round-trip test exists because that is exactly what an
- * earlier version of this function did.
+ * as ticker `DATA`; the round-trip test existed because that is exactly what an
+ * earlier version of this function did. `formatPath` carries the same decision
+ * forward as `/analysis/valuation`, a shape with no empty segment at all.
  */
 export function parseHash(hash: string): Location {
-  const parts = hash.replace(/^#\/?/, "").split("/").map(decodeURIComponent);
+  const parts = hash.replace(/^#\/?/, "").split("/").map(decodeSegment);
   const [rawView, rawTicker, rawTab] = parts;
   const view = rawView && isView(rawView) ? rawView : DEFAULT_LOCATION.view;
   if (view !== "analysis") return { view, tab: DEFAULT_LOCATION.tab, ticker: null };
   const ticker = rawTicker ? rawTicker.toUpperCase() : null;
   const tab = rawTab && isTab(rawTab) ? rawTab : DEFAULT_LOCATION.tab;
   return { view, tab, ticker };
-}
-
-/**
- * A Location -> the hash it round-trips through.
- *
- * The non-Analysis views carry neither ticker nor tab, so the URL cannot
- * express "the About page, for AAPL" -- the same reason app.py hides the ticker
- * selector on those views (app.py:872).
- */
-export function formatHash(location: Location): string {
-  if (location.view !== "analysis") return `#/${location.view}`;
-  const ticker = location.ticker ?? "";
-  return `#/analysis/${encodeURIComponent(ticker)}/${location.tab}`;
 }
 
 /**

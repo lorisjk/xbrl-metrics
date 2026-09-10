@@ -19,7 +19,7 @@
  * can read what *would* go before deciding to hide it.
  */
 import type { HiddenSeries } from "./charts/outliers.ts";
-import { OUTLIER_MEDIAN_RATIO, hiddenTotal } from "./charts/outliers.ts";
+import { OUTLIER_MEDIAN_RATIO, OUTLIER_MIN_HIDDEN_GROWTH, hiddenTotal } from "./charts/outliers.ts";
 import { csvNumber } from "./data/csv.ts";
 import "./outliers.css";
 
@@ -54,12 +54,27 @@ export default function OutlierControls({
    * does have instead (app.py:1085).
    */
   maskedNote: string;
-  /** `"median"` in the grid, `"own median"` in the comparison chart. */
+  /**
+   * `"median"` in the grid, `"own median"` in the comparison chart.
+   *
+   * **Only for the series whose reference *is* their median.** A growth panel
+   * whose median is not positive is judged against the floored size of its
+   * typical move instead (`outlierReference`), and printing that number under
+   * the word "median" would put a wrong figure in the audit trail -- the
+   * precise thing the expander exists to prevent. Those series say `scale`,
+   * which is neither of the two tabs' wording because neither tab can reach
+   * them: 0 of 4,283 valuation series and 0 of 4,497 comparison series have a
+   * non-positive median (see the report), so this prop is unchanged wherever
+   * it was ever read.
+   */
   medianLabel: string;
 }) {
   if (report.length === 0) return null;
 
   const total = hiddenTotal(report);
+  /** What this series' ratios are against, in the reader's words. */
+  const basisLabel = (series: HiddenSeries) =>
+    series.basis === "median" ? medianLabel : "scale";
   const summary = report
     .map((s) => `${label(s.key)} (${s.points.length} point${s.points.length > 1 ? "s" : ""})`)
     .join(", ");
@@ -92,14 +107,15 @@ export default function OutlierControls({
         {report.map((series) => (
           <div key={series.key}>
             <p className="outliers__head">
-              <strong>{label(series.key)}</strong> — {medianLabel} {groupedTwo(series.median)}
+              <strong>{label(series.key)}</strong> — {basisLabel(series)}{" "}
+              {groupedTwo(series.reference)}
             </p>
             <table className="outliers__table">
               <thead>
                 <tr>
                   <th scope="col">Period</th>
                   <th scope="col">Value</th>
-                  <th scope="col">x {medianLabel}</th>
+                  <th scope="col">x {basisLabel(series)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,8 +180,11 @@ export const COMPARISON_MASKED_NOTE =
 export const GROWTH_MASK_HELP =
   `Hides points more than ${OUTLIER_MEDIAN_RATIO}x the panel's own median. Growth rates centre ` +
   "near zero, so on a series growing a few percent a quarter that threshold is reached by an " +
-  "ordinary good quarter, not only by an extreme one — read the list before trusting it. Applies " +
-  "per panel, per mode, and only to what is drawn: the values stay in the data tab and the exports.";
+  "ordinary good quarter, not only by an extreme one — read the list before trusting it. " +
+  `Where the median is not positive — a series that falls as often as it rises — the threshold is ` +
+  `${OUTLIER_MEDIAN_RATIO}x the size of a typical move instead, and never less than ` +
+  `+${100 * OUTLIER_MIN_HIDDEN_GROWTH}%. Applies per panel, per mode, and only to what is drawn: ` +
+  "the values stay in the data tab and the exports.";
 
 export const GROWTH_MASKED_NOTE =
   "Nothing else moved: this chart draws no mean line, and no figure shown elsewhere is computed " +
