@@ -42,10 +42,12 @@ import {
   DEFAULT_LOCATION,
   TABS,
   TAB_LABELS,
-  formatHash,
+  formatPath,
   isChartTab,
+  legacyPath,
   locationFrom,
-  parseHash,
+  parsePath,
+  sameLocation,
   tabDrawsFigure,
   withTab,
   withTicker,
@@ -64,15 +66,32 @@ const INTRO =
   "This data stream is as pure as possible.";
 
 /**
- * The URL hash is the single source of truth for where you are.
+ * The URL **path** is the single source of truth for where you are.
  *
- * With one addition, and only at startup: three of the four views are also
- * **prerendered at real paths** (`/about`, `/encyclopedia`, `/coverage`), so a
- * visitor can arrive from a search result with a pathname and no hash. Reading
- * the pathname once, through `locationFrom`, is what stops that visitor seeing
- * the static About content and then being thrown to the Analysis view the
- * moment the bundle boots. The hash still wins whenever it names anything, and
- * nothing below writes a path -- see `locationFrom`.
+ * It was the hash until this cycle; `navigation.ts`'s docstring holds the three
+ * measured reasons it stopped being. What that changes here is exactly three
+ * lines of mechanism, and nothing else in this file: the reader is `parsePath`
+ * instead of `parseHash`, the event is `popstate` instead of `hashchange`, and
+ * the writer is `history.pushState` instead of an assignment to
+ * `window.location.hash`. Every call site below still calls `go(withX(...))`,
+ * because the location was already a value rather than a string.
+ *
+ * **Hand-rolled, not a router.** The project's standing preference for small
+ * owned modules is the weaker half of the argument; the stronger half is that
+ * there is nothing for a router to do. There are four views and six tabs, both
+ * closed sets, both already decided by a switch expression in the tree below,
+ * and no nested layouts, no data loaders, no code splitting per route. What a
+ * router would add is a component model this file does not use and a dependency
+ * larger than the whole shell -- against 12 lines of `history` calls whose
+ * grammar is already checkable from Node, which is where every routing
+ * assertion in this project's reports comes from.
+ *
+ * **No `umami.track()` call.** Umami's tracker wraps `history.pushState` and
+ * `history.replaceState` and records a pageview whenever the URL they are given
+ * differs from the last one -- so the two `history` calls below *are* the
+ * tracking, and adding an explicit call beside them counts every navigation
+ * twice. Measured against the real script rather than read off the docs; see
+ * the report.
  */
 function useLocation(): [Location, (next: Location) => void] {
   const read = () =>
@@ -81,16 +100,40 @@ function useLocation(): [Location, (next: Location) => void] {
       : locationFrom(window.location.hash, window.location.pathname);
   const [location, setLocation] = useState<Location>(read);
 
-  // Back/forward, and a hash pasted into the bar, both arrive here.
+  // A `#/analysis/AAPL/growth` shared before this shipped, converted to the
+  // path that means the same thing -- once, on boot, with `replaceState` so the
+  // old form leaves no history entry and can never be bookmarked forward.
+  //
+  // `read()` above has *already* used the hash, through `locationFrom`'s
+  // unchanged precedence rule, so this does not decide anything: the state and
+  // the address bar are computed from the same `parseHash` and cannot disagree.
+  // It runs in an effect rather than during render because it touches the
+  // browser, and it is idempotent -- after it, there is no hash left to convert.
   useEffect(() => {
-    const onHash = () => setLocation(parseHash(window.location.hash));
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    const path = legacyPath(window.location.hash, window.location.search);
+    if (path !== null) window.history.replaceState(null, "", path);
+  }, []);
+
+  // Back/forward, and a path pasted into the bar, both arrive here. `popstate`
+  // is what the hash scheme got for free from `hashchange`: `pushState` entries
+  // are history entries, so the browser's own stack still holds every place the
+  // reader has been, and this only has to re-read the URL it lands on.
+  useEffect(() => {
+    const onPop = () => setLocation(parsePath(window.location.pathname));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   const go = (next: Location) => {
-    const hash = formatHash(next);
-    if (window.location.hash !== hash) window.location.hash = hash;
+    // A click that changes nothing writes nothing. The hash scheme got this
+    // from comparing strings; here it has to be the *location* that is compared,
+    // because one location has two spellings -- clicking "Data" while sitting on
+    // the prerendered `/ticker/NVDA` would otherwise push `/analysis/NVDA/data`,
+    // a history entry and an Umami pageview for standing still.
+    if (sameLocation(next, location)) return;
+    // The query string is carried, not managed: nothing in the app reads it, and
+    // dropping a campaign parameter at the first click would be a silent loss.
+    window.history.pushState(null, "", `${formatPath(next)}${window.location.search}`);
     setLocation(next);
   };
   return [location, go];
@@ -109,10 +152,10 @@ const [sidebarOpen, setSidebarOpen] = useState(() => {
   // does -- a widget that is not rendered in a run loses its state, so ticking
   // the box again offers today rather than the previous pick.
   //
-  // Deliberately **not** in the URL hash. The hash carries view, ticker and tab
+  // Deliberately **not** in the URL. The path carries view, ticker and tab
   // (navigation.ts's docstring says why the per-chart selections stay out of
   // it), and an as-of date has the same property: it is a reading mode, not a
-  // place. Adding it later is a change to `parseHash`/`formatHash` and to this
+  // place. Adding it later is a change to `parsePath`/`formatPath` and to this
   // line, nothing else.
   const [asOf, setAsOf] = useState<Date | null>(null);
 

@@ -25,8 +25,10 @@
  * boots the live SPA the instant it downloads. This is prerendering, not a
  * static fork of the app: the static HTML is what the crawler and the first
  * paint get, and React replaces it with the identical tree a moment later.
- * `App.tsx` reads `window.location.pathname` once at startup so that the view
- * it boots into is the one the static HTML showed.
+ * `App.tsx` boots into the view its own pathname names -- `parsePath` is the
+ * app's primary reader as of the real-path cycle, so the state the bundle wakes
+ * up in is the state the static HTML was showing, by the same rule that governs
+ * every other navigation rather than by a startup special case.
  *
  * **Failure here does not fail the build.** The nightly cron builds and deploys
  * the site; losing crawlability for a night is a smaller harm than not
@@ -232,10 +234,18 @@ function description(raw) {
  * `sitemap.xml`, written whether or not the browser was available.
  *
  * Every prerendered path, absolute against SITE -- the homepage, the three
- * reference pages and the top-50 ticker pages. The other 559 tickers are
- * deliberately absent: they are reachable only as hash fragments
- * (`#/analysis/AAPL/data`), which are not distinct URLs to a crawler, so
- * listing them would be listing the homepage five hundred times.
+ * reference pages and the top-50 ticker pages.
+ *
+ * **The other 559 tickers are still deliberately absent, for a reason that
+ * changed under them.** It used to be that they had no URL to list: they were
+ * reachable only as hash fragments (`#/analysis/AAPL/data`), which are not
+ * distinct URLs to a crawler. Since the real-path cycle every one of them has a
+ * real URL -- `/analysis/AAOI/data` -- and `try_files` answers it. What it
+ * answers with is the SPA shell, whose body is the homepage's: an empty
+ * `.content__body` with three links in it. So listing them would still be
+ * listing the homepage five hundred times, and the sitemap would be claiming
+ * content that only appears after JavaScript runs. Listing them becomes right
+ * the day those pages are prerendered, and not before -- see the report.
  */
 async function writeSitemap(routes) {
   const lastmod = new Date().toISOString().slice(0, 10);
@@ -436,8 +446,8 @@ ${document.documentElement.outerHTML}`,
     // Isolation, stated: one ticker failing costs that ticker's static page and
     // nothing else. The path is not a dead link -- there is simply no file at
     // it, so `try_files` falls through to `/index.html`, the SPA boots,
-    // `locationFrom` reads `/ticker/<T>` and shows that ticker's Data tab.
-    // Which is exactly how the other 559 tickers work today.
+    // `parsePath` reads `/ticker/<T>` and shows that ticker's Data tab. Which is
+    // exactly how the other 559 tickers work today, at `/analysis/<T>/data`.
     log(`${failures.length} route(s) fell back to the interactive shell:`);
     for (const f of failures) log(`  ${f}`);
   }
