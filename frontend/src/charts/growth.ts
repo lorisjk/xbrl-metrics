@@ -41,7 +41,13 @@
  */
 import type { Frames, GrowthMode, Registry } from "../contracts.ts";
 import { PRIMARY_COLOR, createGrid, drawPanel, type FigureSpec, type PanelSpec } from "./panel.ts";
-import { outlierMask, outlierReport, type HiddenSeries } from "./outliers.ts";
+import {
+  outlierMask,
+  outlierReference,
+  outlierReport,
+  type HiddenSeries,
+  type OutlierBasis,
+} from "./outliers.ts";
 import { anyValue, seriesFor, selectMetricIds, valuesFrom, windowCutoff } from "./select.ts";
 
 /** figures.py: `_size(width, height, 500 * cols, 360 * rows)`. */
@@ -193,6 +199,16 @@ export function buildGrowth(
     // `x` shrinks with `y`.
     const hidden = mask && !empty ? outlierMask(y) : null;
     const hiddenCount = hidden ? hidden.filter(Boolean).length : 0;
+    // Which of `outlierReference`'s two branches the mask above took, asked
+    // rather than re-derived, and only when there is an annotation to word.
+    // This is the only chart that can reach the scale branch: a valuation
+    // series cannot have a non-positive median, because every published
+    // multiple divides by a denominator the pipeline already forced positive.
+    let hiddenBasis: OutlierBasis | undefined;
+    if (hiddenCount) {
+      const usable = y.filter((v): v is number => v !== null && Number.isFinite(v));
+      hiddenBasis = outlierReference(usable).basis;
+    }
     const drawn = hiddenCount
       ? { x: series.x.filter((_, i) => !hidden![i]), y: y.filter((_, i) => !hidden![i]) }
       : { x: series.x, y };
@@ -211,6 +227,7 @@ export function buildGrowth(
         connectgaps: true,
       }],
       hiddenCount,
+      hiddenBasis,
       // Never a mean line: `build_growth` has no `plot_metric` call to pass
       // `show_mean` to. Only `build_valuation` sets it (figures.py:753).
       mean: null,

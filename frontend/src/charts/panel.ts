@@ -21,7 +21,7 @@
  */
 import { axisNumber, axisSuffix, cellDomain, cellFor, makeGrid } from "./grid.ts";
 import type { MeanLine } from "./mean.ts";
-import { OUTLIER_MEDIAN_RATIO } from "./outliers.ts";
+import { OUTLIER_MEDIAN_RATIO, type OutlierBasis } from "./outliers.ts";
 
 /** figures.py:19-24 -- pinned, not left to plotly's cycle. */
 export const PRIMARY_COLOR = "#1f77b4";
@@ -349,6 +349,19 @@ export interface PanelSpec {
    * the figure. The drawing layer stays a drawing layer.
    */
   hiddenCount?: number;
+  /**
+   * What those points were judged against, for the annotation's own wording.
+   *
+   * Absent means `"median"`, which is what every valuation panel passes and
+   * what the growth grid passes for two thirds of its own -- so the annotation
+   * this figure carries is byte for byte the reference's wherever the
+   * reference has one. A growth panel whose median is not positive is judged
+   * against the floored size of its typical move instead, and says so: a note
+   * that reads `(>5x median)` beside a mask computed from something else is a
+   * figure describing itself wrongly, and figures.py:398's whole reason for
+   * existing is that the exported file has to be self-describing.
+   */
+  hiddenBasis?: OutlierBasis;
 }
 
 /**
@@ -497,7 +510,8 @@ export function drawPanel(fig: FigureSpec, idx: number, panel: PanelSpec): void 
     fig.layout.annotations.push({
       text:
         `${panel.hiddenCount} outlier${panel.hiddenCount > 1 ? "s" : ""} hidden ` +
-        `(&gt;${OUTLIER_MEDIAN_RATIO}x median) &middot; Ø unchanged`,
+        `(&gt;${OUTLIER_MEDIAN_RATIO}x ${panel.hiddenBasis === "scale" ? "scale" : "median"})` +
+        " &middot; Ø unchanged",
       x: 0.98,
       y: 0.02,
       xref: `${refs.xaxis} domain`,
