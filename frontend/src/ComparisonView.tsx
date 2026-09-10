@@ -85,6 +85,15 @@ export default function ComparisonView({
 }) {
   const options = useMemo(() => catalogue(registry), [registry]);
   const [concept, setConcept] = useState(() => options[0]?.id ?? "");
+  // This chart holds one concept and several lines, so the outlier report is
+  // keyed by ticker and every line describes the *same* metric -- which is why
+  // the percent answer below ignores its key. `dividend_yield` is the one
+  // valuation metric with `percent: true`, and it is the only concept this
+  // chart can mask that reaches the percent branch at all.
+  const conceptIsPercent = useMemo(
+    () => registry.metrics.find((m) => m.id === concept)?.percent ?? false,
+    [registry, concept],
+  );
 
   // app.py:1030 defaults to the first three of the universe. Seeding with the
   // shell's ticker first is this build's one departure and it is a small one:
@@ -218,6 +227,7 @@ export default function ComparisonView({
         masked={masked}
         onMasked={setMasked}
         label={(ticker) => ticker}
+        percent={() => conceptIsPercent}
         help={COMPARISON_MASK_HELP}
         maskedNote={COMPARISON_MASKED_NOTE}
         medianLabel="own median"

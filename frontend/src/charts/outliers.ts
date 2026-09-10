@@ -80,6 +80,92 @@ export function median(values: readonly number[]): number {
 export const OUTLIER_MIN_HIDDEN_GROWTH = 2;
 
 /**
+ * The smallest growth rate the **median** branch can hide. +50%.
+ *
+ * The median branch was the one the guard clause left alone, and a cycle of
+ * measurement says it needed a floor too -- for the same reason and by a
+ * milder version of the same mechanism. A positive median can be arbitrarily
+ * close to zero: over the growth grid the smallest is **1.11e-16**, the 1st
+ * percentile is 2.7e-4, and **430 series have a positive median below 0.1%**,
+ * between them hiding 7,892 points. Five times nothing is nothing, so those
+ * panels hide every value above zero -- `PSX/LongTermDebt/qoq` hid 25 of its
+ * 58 points including four at +0.0% and +0.1%. Sign was never the predicate;
+ * scale was.
+ *
+ * **+50% is where the marginal quality of removal runs out**, measured with
+ * two instruments neither of which is a ratio to the median (judging `k` by a
+ * `k`-shaped measure would be circular):
+ *
+ *   * a **robust z**, `|v - median| / (1.4826 * MAD)` -- how far the point is
+ *     from its series' centre in units of that series' own spread;
+ *   * the **marginal drawn span**, `span(kept + this point) / span(kept)` --
+ *     what hiding this one point actually buys the reader.
+ *
+ * A point counts as a genuine flag at z >= 3.5 (the conventional line) or a
+ * span effect of 1.5x or more. Sweeping the floor and asking what fraction of
+ * each additional slice was genuine:
+ *
+ *     0 -> 3%    11.8%     +30 -> +40%   25.5%
+ *     +3 -> +5%  14.9%     +40 -> +50%   33.0%   <- last slice that is 2:1 junk
+ *     +5 -> +10% 14.5%     +50 -> +75%   46.6%   <- a coin flip
+ *     +15 -> +20% 19.6%    +75 -> +100%  63.5%
+ *     +20 -> +25% 21.5%    +150 -> +200% 86.5%
+ *
+ * It is a ramp rather than a cliff, so the stopping rule is stated rather than
+ * discovered: **stop at the last floor whose marginal slice is at least 2:1
+ * junk.** A 3:1 rule would stop at +40% instead, 10,114 points earlier.
+ *
+ * Cumulatively this stops hiding 82,147 of 154,504 points, **79.6% of which
+ * were junk by both instruments**, and costs nothing in coverage: the share of
+ * series holding a +200%..+1,000% point that still fire is 98.8%, unchanged,
+ * and of those holding a >+1,000% point, 99.9%, unchanged.
+ *
+ * It is **lower than the scale branch's +200%** because the two branches face
+ * different distributions, and each was derived against its own. On this
+ * branch a +200% floor would stop hiding 131,103 points of which 36.7% were
+ * genuine -- a third of the flags thrown away with the noise.
+ */
+export const OUTLIER_MIN_HIDDEN_MEDIAN = 0.5;
+
+/**
+ * The smallest value each branch may hide, in **the series' own units**.
+ *
+ * A parameter rather than a module constant, and this is the point of Part B's
+ * one structural change: a floor is a growth rate, and only the growth chart
+ * knows that its values are growth rates. `dividend_yield` is the proof --
+ * a valuation metric whose median is around 0.013, so a floor of 0.10 would
+ * put its threshold at a 50% dividend yield and disable masking for it
+ * outright. Measured on the same export, the valuation grid and the comparison
+ * chart need no floor at all: their hidden points score a median robust z of
+ * 14.3 and 13.2 with 0.1% and 0.3% below the z = 3.5 line, against growth's
+ * 1.8 and 72.1%. The same rule is well calibrated there and was not here.
+ *
+ * So the two charts that must not change pass nothing and get `NO_FLOOR`,
+ * which is today's rule exactly; growth passes `GROWTH_OUTLIER_FLOOR`. That is
+ * a stronger guarantee than the measurement alone: they are unchanged **by
+ * construction**, not because no series happens to reach the branch.
+ *
+ * It also closes the crack the last cycle left open: a valuation series that
+ * ever did reach the scale branch used to get a floor of 0.4 -- four tenths of
+ * a sales multiple, a number nobody calibrated. It now gets no floor.
+ */
+export interface OutlierFloor {
+  /** Applied when the median is positive. */
+  median: number;
+  /** Applied when it is not -- the branch the last cycle built. */
+  scale: number;
+}
+
+/** What the valuation grid and the comparison chart pass: today's rule. */
+export const NO_FLOOR: OutlierFloor = { median: 0, scale: 0 };
+
+/** What the growth grid passes. Both numbers are growth rates. */
+export const GROWTH_OUTLIER_FLOOR: OutlierFloor = {
+  median: OUTLIER_MIN_HIDDEN_MEDIAN,
+  scale: OUTLIER_MIN_HIDDEN_GROWTH,
+};
+
+/**
  * The reference a series is judged against, and which of the two it is.
  *
  * `"median"` is the shipped rule, untouched. `"scale"` is the branch this cycle
@@ -149,11 +235,24 @@ export interface OutlierReference {
 export function outlierReference(
   usable: readonly number[],
   k: number = OUTLIER_MEDIAN_RATIO,
-  minHidden: number = OUTLIER_MIN_HIDDEN_GROWTH,
+  floor: OutlierFloor = NO_FLOOR,
 ): OutlierReference {
   const centre = median(usable);
-  if (centre > 0) return { centre, basis: "median" };
-  return { centre: Math.max(median(usable.map(Math.abs)), minHidden / k), basis: "scale" };
+  if (centre > 0) {
+    const floored = Math.max(centre, floor.median / k);
+    // **`basis` answers "is the number printed the series' own median?"**, and
+    // once a floor exists the answer is sometimes no even here. AAPL's revenue
+    // growth has a median of 8.04% and a reference of 10.00%; a heading reading
+    // `median 10.00%` would put a figure in the audit trail that is not the
+    // median of anything, which is the class of quiet inaccuracy this module has
+    // now removed twice. When the floor binds the reference is a scale, and it
+    // is called one.
+    return { centre: floored, basis: floored === centre ? "median" : "scale" };
+  }
+  return {
+    centre: Math.max(median(usable.map(Math.abs)), floor.scale / k),
+    basis: "scale",
+  };
 }
 
 /**
@@ -183,12 +282,13 @@ export function outlierMask(
   values: readonly (number | null)[],
   k: number = OUTLIER_MEDIAN_RATIO,
   minPoints: number = OUTLIER_MIN_POINTS,
+  floor: OutlierFloor = NO_FLOOR,
 ): boolean[] {
   const mask = values.map(() => false);
   const usable: number[] = [];
   for (const v of values) if (v !== null && Number.isFinite(v)) usable.push(v);
   if (usable.length < minPoints) return mask;
-  const { centre } = outlierReference(usable, k);
+  const { centre } = outlierReference(usable, k, floor);
   // `if not (median > 0)` -- a NaN reference fails this too, which is the point
   // of writing it in the negative on both sides.
   //
@@ -246,15 +346,16 @@ const round1 = (v: number) => Math.round(v * 10) / 10;
  */
 export function outlierReport(
   series: readonly { key: string; x: readonly Date[]; y: readonly (number | null)[] }[],
+  floor: OutlierFloor = NO_FLOOR,
 ): HiddenSeries[] {
   const out: HiddenSeries[] = [];
   for (const { key, x, y } of series) {
-    const mask = outlierMask(y);
+    const mask = outlierMask(y, OUTLIER_MEDIAN_RATIO, OUTLIER_MIN_POINTS, floor);
     if (!mask.some(Boolean)) continue;
     const usable = y.filter((v): v is number => v !== null && Number.isFinite(v));
     // The same call `outlierMask` just made, not a second copy of the
     // expression -- see `outlierReference`.
-    const { centre, basis } = outlierReference(usable);
+    const { centre, basis } = outlierReference(usable, OUTLIER_MEDIAN_RATIO, floor);
     const points: HiddenPoint[] = [];
     for (let i = 0; i < mask.length; i += 1) {
       if (mask[i]) points.push({ end: x[i], value: y[i]!, ratio: round1(y[i]! / centre) });

@@ -309,14 +309,12 @@ export default function ChartView({
         />
       )}
 
-      {/* app.py:942 puts the toggle above the chart and the caption below it.
-          Both live in one component, so it sits here and the reading order is
-          toggle, chart, what-was-hidden -- see its docstring. */}
       <OutlierControls
         report={result?.outliers ?? []}
         masked={isMasked}
         onMasked={(next) => setMasked({ ...masked, [chart]: next })}
         label={(id) => byId.get(id)?.label ?? id}
+        percent={(id) => byId.get(id)?.percent ?? false}
         help={MASK_STRINGS[chart]?.help ?? VALUATION_MASK_HELP}
         maskedNote={MASK_STRINGS[chart]?.note ?? VALUATION_MASKED_NOTE}
         medianLabel="median"

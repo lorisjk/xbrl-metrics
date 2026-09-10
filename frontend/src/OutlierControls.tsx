@@ -19,11 +19,26 @@
  * can read what *would* go before deciding to hide it.
  */
 import type { HiddenSeries } from "./charts/outliers.ts";
-import { OUTLIER_MEDIAN_RATIO, OUTLIER_MIN_HIDDEN_GROWTH, hiddenTotal } from "./charts/outliers.ts";
+import {
+  OUTLIER_MEDIAN_RATIO,
+  OUTLIER_MIN_HIDDEN_GROWTH,
+  OUTLIER_MIN_HIDDEN_MEDIAN,
+  hiddenTotal,
+} from "./charts/outliers.ts";
 import { csvNumber } from "./data/csv.ts";
+import { formatRatio } from "./data/format.ts";
 import "./outliers.css";
 
-/** app.py:1009 `{median:,.2f}` — the heading only; the table never rounds. */
+/**
+ * app.py:1009 `{median:,.2f}` — the heading only; the table never rounds.
+ *
+ * **Kept, and only for the metrics whose value is a bare number.** It was
+ * written for a P/E, whose median reads `65.74`, and it is right for those:
+ * `format.ts`'s non-percent branch is a *different* convention — four decimals
+ * and no thousands separators — so reusing `formatRatio` for everything would
+ * turn that heading into `65.7400` and a large one into `1234.5600`. Measured,
+ * not assumed; see the report. A percent metric takes `formatRatio` instead.
+ */
 const groupedTwo = (value: number) =>
   value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -36,6 +51,7 @@ export default function OutlierControls({
   masked,
   onMasked,
   label,
+  percent,
   help,
   maskedNote,
   medianLabel,
@@ -46,6 +62,21 @@ export default function OutlierControls({
   onMasked: (next: boolean) => void;
   /** Turns a report key into what the reader calls it: a metric label, or a ticker. */
   label: (key: string) => string;
+  /**
+   * Is this series' quantity a percentage?
+   *
+   * A second lookup beside `label` rather than a new `percent` field on
+   * `HiddenSeries`, because it is a **registry** fact about the metric and not
+   * a fact about the masking: `outliers.ts` computes a mask and knows nothing
+   * about display, which is the split this module has had since item 10. The
+   * two callers already resolve the metric to produce `label`, so this costs
+   * them one more property of the object they are already holding.
+   *
+   * It is keyed like `label` is -- by concept in the valuation and growth
+   * grids, by ticker in the comparison chart, where the concept is fixed for
+   * the whole chart and the caller answers the same for every line.
+   */
+  percent: (key: string) => boolean;
   /** The toggle's help text — the two tabs word the rule differently. */
   help: string;
   /**
@@ -75,6 +106,20 @@ export default function OutlierControls({
   /** What this series' ratios are against, in the reader's words. */
   const basisLabel = (series: HiddenSeries) =>
     series.basis === "median" ? medianLabel : "scale";
+  /**
+   * The reference, printed the way the rest of the app prints that metric.
+   *
+   * A growth series' median is a *fraction* -- `0.08` is +8% -- and every other
+   * surface in this app renders it through `formatRatio`, which is why the data
+   * tab says `8.24%` for the same quantity this heading used to call `0.08`. It
+   * is the one number on the panel a reader had to convert by hand.
+   *
+   * **The ratio column below is untouched and must be**: `Value / reference` is
+   * dimensionless whatever the metric is, so a percent sign on it would be a
+   * second, wrong claim. Only the heading names a quantity.
+   */
+  const referenceText = (series: HiddenSeries) =>
+    percent(series.key) ? formatRatio(series.reference, true) : groupedTwo(series.reference);
   const summary = report
     .map((s) => `${label(s.key)} (${s.points.length} point${s.points.length > 1 ? "s" : ""})`)
     .join(", ");
@@ -108,7 +153,7 @@ export default function OutlierControls({
           <div key={series.key}>
             <p className="outliers__head">
               <strong>{label(series.key)}</strong> — {basisLabel(series)}{" "}
-              {groupedTwo(series.reference)}
+              {referenceText(series)}
             </p>
             <table className="outliers__table">
               <thead>
@@ -178,13 +223,14 @@ export const COMPARISON_MASKED_NOTE =
  * than five times a P/E's.
  */
 export const GROWTH_MASK_HELP =
-  `Hides points more than ${OUTLIER_MEDIAN_RATIO}x the panel's own median. Growth rates centre ` +
-  "near zero, so on a series growing a few percent a quarter that threshold is reached by an " +
-  "ordinary good quarter, not only by an extreme one — read the list before trusting it. " +
-  `Where the median is not positive — a series that falls as often as it rises — the threshold is ` +
-  `${OUTLIER_MEDIAN_RATIO}x the size of a typical move instead, and never less than ` +
-  `+${100 * OUTLIER_MIN_HIDDEN_GROWTH}%. Applies per panel, per mode, and only to what is drawn: ` +
-  "the values stay in the data tab and the exports.";
+  `Hides points more than ${OUTLIER_MEDIAN_RATIO}x the panel's own median, and never anything ` +
+  `below +${100 * OUTLIER_MIN_HIDDEN_MEDIAN}%. Growth rates centre near zero, so a median can be ` +
+  "a fraction of a percent — five times that is still nothing, and the floor is what stops an " +
+  "ordinary quarter being called extreme. Where the median is not positive — a series that falls " +
+  `as often as it rises — the threshold is ${OUTLIER_MEDIAN_RATIO}x the size of a typical move ` +
+  `and never less than +${100 * OUTLIER_MIN_HIDDEN_GROWTH}%. Either way the list below names ` +
+  "every hidden value, and the heading says which number the ratios are against. Applies per " +
+  "panel, per mode, and only to what is drawn: the values stay in the data tab and the exports.";
 
 export const GROWTH_MASKED_NOTE =
   "Nothing else moved: this chart draws no mean line, and no figure shown elsewhere is computed " +
