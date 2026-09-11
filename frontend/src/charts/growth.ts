@@ -42,6 +42,9 @@
 import type { Frames, GrowthMode, Registry } from "../contracts.ts";
 import { PRIMARY_COLOR, createGrid, drawPanel, type FigureSpec, type PanelSpec } from "./panel.ts";
 import {
+  GROWTH_OUTLIER_FLOOR,
+  OUTLIER_MEDIAN_RATIO,
+  OUTLIER_MIN_POINTS,
   outlierMask,
   outlierReference,
   outlierReport,
@@ -197,7 +200,11 @@ export function buildGrowth(
     //
     // Rows are **removed**, not nulled: `filtered.loc[~hidden]` drops them, so
     // `x` shrinks with `y`.
-    const hidden = mask && !empty ? outlierMask(y) : null;
+    // **The floor is passed here and nowhere else.** It is a growth rate, and
+    // this is the only chart whose values are growth rates -- see `OutlierFloor`.
+    const hidden = mask && !empty
+      ? outlierMask(y, OUTLIER_MEDIAN_RATIO, OUTLIER_MIN_POINTS, GROWTH_OUTLIER_FLOOR)
+      : null;
     const hiddenCount = hidden ? hidden.filter(Boolean).length : 0;
     // Which of `outlierReference`'s two branches the mask above took, asked
     // rather than re-derived, and only when there is an annotation to word.
@@ -207,7 +214,7 @@ export function buildGrowth(
     let hiddenBasis: OutlierBasis | undefined;
     if (hiddenCount) {
       const usable = y.filter((v): v is number => v !== null && Number.isFinite(v));
-      hiddenBasis = outlierReference(usable).basis;
+      hiddenBasis = outlierReference(usable, OUTLIER_MEDIAN_RATIO, GROWTH_OUTLIER_FLOOR).basis;
     }
     const drawn = hiddenCount
       ? { x: series.x.filter((_, i) => !hidden![i]), y: y.filter((_, i) => !hidden![i]) }
@@ -236,5 +243,8 @@ export function buildGrowth(
     drawPanel(figure, idx, spec);
   });
 
-  return { figure, panels, offerable, mode, outliers: outlierReport(windowed) };
+  return {
+    figure, panels, offerable, mode,
+    outliers: outlierReport(windowed, GROWTH_OUTLIER_FLOOR),
+  };
 }
