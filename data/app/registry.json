@@ -1,6 +1,6 @@
 {
  "schema": 2,
- "generated_at": "2026-10-07T10:42:15",
+ "generated_at": "2026-10-08T10:59:31",
  "language_primary": "en",
  "default_profile": "standard",
  "charts": {
@@ -3783,7 +3783,6 @@
   "PPL": "utilities",
   "PRU": "insurance_life",
   "PSA": "reit",
-  "PSKY": "media",
   "PSX": "energy_integrated",
   "PTC": "standard",
   "PWR": "industrials",
