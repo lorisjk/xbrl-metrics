@@ -1,6 +1,6 @@
 {
  "schema": 2,
- "generated_at": "2026-10-16T08:33:25",
+ "generated_at": "2026-10-17T08:10:11",
  "language_primary": "en",
  "default_profile": "standard",
  "charts": {
@@ -3791,7 +3791,6 @@
   "Q": "standard",
   "QCOM": "standard",
   "QLYS": "standard",
-  "QRVO": "standard",
   "RBA": "standard",
   "RBLX": "standard",
   "RBRK": "standard",
