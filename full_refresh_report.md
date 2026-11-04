@@ -2,9 +2,9 @@
 
 ## Run metadata
 
-- Start: 2026-11-03T11:07:08
-- End: 2026-11-03T11:23:31
-- Total wall-clock time: 982.7s (16.4 min)
+- Start: 2026-11-04T11:16:46
+- End: 2026-11-04T11:32:11
+- Total wall-clock time: 925.6s (15.4 min)
 - Active tickers requested: 610
 - Tickers processed: 604
 - Cached facts files deleted: 2
@@ -30,42 +30,42 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 ## Timing
 
 ### Phase 1 -- yfinance fetch
-- Total: 407.0s across 610 tickers
-- Average per ticker: 0.67s
+- Total: 382.9s across 610 tickers
+- Average per ticker: 0.63s
 - Slowest 10 tickers:
-  - A: 1.05s
-  - HST: 0.98s
-  - AEP: 0.91s
-  - CAH: 0.90s
-  - AME: 0.88s
-  - HLT: 0.85s
-  - LMT: 0.85s
-  - CIEN: 0.84s
-  - CL: 0.84s
-  - NUE: 0.83s
+  - A: 0.90s
+  - MSI: 0.87s
+  - GD: 0.78s
+  - NI: 0.78s
+  - HON: 0.77s
+  - WFC: 0.77s
+  - LOW: 0.77s
+  - PEG: 0.77s
+  - GE: 0.77s
+  - OMC: 0.76s
 
 ### Phase 2 -- EDGAR fetch
-- Total: 334.3s across 604 tickers
-- Average per ticker: 0.55s
+- Total: 313.3s across 604 tickers
+- Average per ticker: 0.52s
 - Slowest 10 tickers:
-  - GE: 1.69s
-  - FORM: 1.29s
-  - MS: 1.18s
-  - ATO: 1.17s
-  - KEY: 1.12s
-  - HUM: 1.09s
-  - VMC: 1.08s
-  - AES: 1.08s
-  - USB: 1.08s
-  - BAC: 1.07s
+  - SCHW: 1.08s
+  - WFC: 1.05s
+  - USB: 1.00s
+  - COF: 0.93s
+  - MET: 0.90s
+  - STT: 0.90s
+  - D: 0.89s
+  - C: 0.86s
+  - VMC: 0.86s
+  - JPM: 0.84s
 
 ### Phase 3 -- Calculate + plot
-- Calculate (calculate_all_metrics/build_metrics_long/build_valuation_history/build_snapshot, whole batch, one run -- not decomposed per ticker, since doing so would mean calling these functions once per ticker instead of once for the batch, a change to how the calculation runs rather than pure instrumentation): 114.0s
+- Calculate (calculate_all_metrics/build_metrics_long/build_valuation_history/build_snapshot, whole batch, one run -- not decomposed per ticker, since doing so would mean calling these functions once per ticker instead of once for the batch, a change to how the calculation runs rather than pure instrumentation): 110.1s
 - Plot: **skipped** (`write_charts=False`). No figures were built and no chart files were written. Nothing downstream depends on them -- the app renders from `data/app/*.parquet`, exported either way. Re-run with `run_full_refresh(write_charts=True)` to produce `figures/` again.
 
 ## Data quality flags
 
-958 flags across 24 profiles.
+956 flags across 24 profiles.
 
 ### airline
 
@@ -93,11 +93,11 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** KKR `SharesOutstanding`: 26 of 67 (39%) -- `python explore_tags.py KKR sharesoutstanding`
 - **thin** KKR `Goodwill`: 33 of 67 (49%) -- `python explore_tags.py KKR goodwill intangible`
 - **MISSING** OWL `StockIssued`: 0 of 26 (0%) -- `python explore_tags.py OWL issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** TPG `StockRepurchased`: 0 of 23 (0%) -- `python explore_tags.py TPG repurchase treasurystock buyback`
-- **MISSING** TPG `PretaxIncome`: 0 of 23 (0%)
-- **MISSING** TPG `Capex`: 0 of 23 (0%) -- `python explore_tags.py TPG propertyplant productiveassets`
-- **thin** TPG `StockholdersEquity`: 1 of 23 (4%) -- `python explore_tags.py TPG stockholdersequity`
-- **thin** TPG `StockIssued`: 8 of 23 (35%) -- `python explore_tags.py TPG issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** TPG `StockRepurchased`: 0 of 24 (0%) -- `python explore_tags.py TPG repurchase treasurystock buyback`
+- **MISSING** TPG `Capex`: 0 of 24 (0%) -- `python explore_tags.py TPG propertyplant productiveassets`
+- **MISSING** TPG `PretaxIncome`: 0 of 24 (0%)
+- **thin** TPG `StockholdersEquity`: 1 of 24 (4%) -- `python explore_tags.py TPG stockholdersequity`
+- **thin** TPG `StockIssued`: 9 of 24 (38%) -- `python explore_tags.py TPG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 
 ### captive_finance
 
@@ -110,19 +110,19 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** GM `StockIssued`: 6 of 67 (9%) -- `python explore_tags.py GM issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** GM `LongTermDebt`: 15 of 67 (22%) -- `python explore_tags.py GM longtermdebt borrowings notespayable`
 - **thin** GM `Goodwill`: 30 of 67 (45%) -- `python explore_tags.py GM goodwill intangible`
-- **MISSING** PCAR `LongTermDebt`: 0 of 75 (0%) -- `python explore_tags.py PCAR longtermdebt borrowings notespayable`
 - **MISSING** PCAR `OperatingIncomeLoss`: 0 of 75 (0%) -- `python explore_tags.py PCAR operatingincome`
+- **MISSING** PCAR `LongTermDebt`: 0 of 75 (0%) -- `python explore_tags.py PCAR longtermdebt borrowings notespayable`
 - **thin** PCAR `Goodwill`: 15 of 75 (20%) -- `python explore_tags.py PCAR goodwill intangible`
-- **MISSING** TXT `Goodwill`: 0 of 69 (0%) -- `python explore_tags.py TXT goodwill intangible`
 - **MISSING** TXT `LongTermDebt`: 0 of 69 (0%) -- `python explore_tags.py TXT longtermdebt borrowings notespayable`
+- **MISSING** TXT `Goodwill`: 0 of 69 (0%) -- `python explore_tags.py TXT goodwill intangible`
 - **thin** TXT `OperatingIncomeLoss`: 2 of 69 (3%) -- `python explore_tags.py TXT operatingincome`
 - **thin** TXT `ShareBasedCompensation`: 16 of 69 (23%)
 - **thin** TXT `StockIssued`: 28 of 69 (41%) -- `python explore_tags.py TXT issuanceofcommon stockissuedduringperiodvalue saleofequity`
 
 ### consumer_staples
 
-- **MISSING** ADM `StockIssued`: 0 of 74 (0%) -- `python explore_tags.py ADM issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** ADM `OperatingIncomeLoss`: 0 of 74 (0%) -- `python explore_tags.py ADM operatingincome`
+- **MISSING** ADM `StockIssued`: 0 of 75 (0%) -- `python explore_tags.py ADM issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** ADM `OperatingIncomeLoss`: 0 of 75 (0%) -- `python explore_tags.py ADM operatingincome`
 - **thin** BF-B `StockIssued`: 3 of 71 (4%) -- `python explore_tags.py BF-B issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** BF-B `DividendsPerShare`: 35 of 71 (49%) -- `python explore_tags.py BF-B dividendspershare`
 - **MISSING** BG `StockIssued`: 0 of 19 (0%) -- `python explore_tags.py BG issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -146,12 +146,12 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** PG `StockIssued`: 25 of 76 (33%) -- `python explore_tags.py PG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** PM `ShareBasedCompensation`: 10 of 76 (13%)
 - **thin** PM `StockIssued`: 19 of 76 (25%) -- `python explore_tags.py PM issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** STZ `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py STZ dividendspershare`
 - **MISSING** STZ `SharesOutstanding`: 0 of 71 (0%) -- `python explore_tags.py STZ sharesoutstanding`
-- **thin** SYY `DepreciationAndAmortization`: 36 of 74 (49%) -- `python explore_tags.py SYY depreciation amortization`
+- **MISSING** STZ `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py STZ dividendspershare`
+- **thin** SYY `DepreciationAndAmortization`: 37 of 75 (49%) -- `python explore_tags.py SYY depreciation amortization`
 - **thin** TAP `StockRepurchased`: 21 of 74 (28%) -- `python explore_tags.py TAP repurchase treasurystock buyback`
-- **MISSING** TSN `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py TSN dividendspershare`
 - **MISSING** TSN `ShareBasedCompensation`: 0 of 71 (0%)
+- **MISSING** TSN `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py TSN dividendspershare`
 
 ### energy
 
@@ -164,7 +164,7 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** HAL `StockIssued`: 9 of 76 (12%) -- `python explore_tags.py HAL issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** KMI `ShareBasedCompensation`: 5 of 66 (8%)
 - **thin** KMI `StockIssued`: 12 of 66 (18%) -- `python explore_tags.py KMI issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **thin** MPC `ShareBasedCompensation`: 24 of 67 (36%)
+- **thin** MPC `ShareBasedCompensation`: 24 of 68 (35%)
 - **thin** OKE `StockRepurchased`: 26 of 76 (34%) -- `python explore_tags.py OKE repurchase treasurystock buyback`
 - **MISSING** TPL `LongTermDebt`: 0 of 30 (0%) -- `python explore_tags.py TPL longtermdebt borrowings notespayable`
 - **thin** TPL `StockIssued`: 1 of 30 (3%) -- `python explore_tags.py TPL issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -198,26 +198,26 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** BNY `PretaxIncome`: 24 of 75 (32%)
 - **MISSING** C `StockIssued`: 0 of 72 (0%) -- `python explore_tags.py C issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** C `ShareBasedCompensation`: 8 of 72 (11%)
-- **thin** FITB `StockIssued`: 9 of 75 (12%) -- `python explore_tags.py FITB issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** FITB `StockIssued`: 9 of 76 (12%) -- `python explore_tags.py FITB issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** GS `StockIssued`: 0 of 76 (0%) -- `python explore_tags.py GS issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** HOOD `NoninterestExpense`: 0 of 29 (0%) -- `python explore_tags.py HOOD noninterestexpense`
-- **MISSING** HOOD `ProvisionForCreditLosses`: 0 of 29 (0%) -- `python explore_tags.py HOOD provisionforloan provisionforcredit`
 - **MISSING** HOOD `DividendsPerShare`: 0 of 29 (0%) -- `python explore_tags.py HOOD dividendspershare`
 - **MISSING** HOOD `NoninterestIncome`: 0 of 29 (0%) -- `python explore_tags.py HOOD noninterestincome`
+- **MISSING** HOOD `NoninterestExpense`: 0 of 29 (0%) -- `python explore_tags.py HOOD noninterestexpense`
+- **MISSING** HOOD `ProvisionForCreditLosses`: 0 of 29 (0%) -- `python explore_tags.py HOOD provisionforloan provisionforcredit`
 - **thin** HOOD `StockRepurchased`: 13 of 29 (45%) -- `python explore_tags.py HOOD repurchase treasurystock buyback`
 - **MISSING** IBKR `StockRepurchased`: 0 of 70 (0%) -- `python explore_tags.py IBKR repurchase treasurystock buyback`
-- **MISSING** IBKR `ProvisionForCreditLosses`: 0 of 70 (0%) -- `python explore_tags.py IBKR provisionforloan provisionforcredit`
 - **MISSING** IBKR `Goodwill`: 0 of 70 (0%) -- `python explore_tags.py IBKR goodwill intangible`
+- **MISSING** IBKR `ProvisionForCreditLosses`: 0 of 70 (0%) -- `python explore_tags.py IBKR provisionforloan provisionforcredit`
 - **thin** IBKR `StockIssued`: 9 of 70 (13%) -- `python explore_tags.py IBKR issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** IBKR `NetInterestIncome`: 30 of 70 (43%) -- `python explore_tags.py IBKR interestincome interestexpensenet`
 - **thin** IBKR `NoninterestIncome`: 30 of 70 (43%) -- `python explore_tags.py IBKR noninterestincome`
-- **thin** JPM `StockIssued`: 2 of 74 (3%) -- `python explore_tags.py JPM issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** JPM `StockIssued`: 2 of 75 (3%) -- `python explore_tags.py JPM issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** MS `StockIssued`: 18 of 76 (24%) -- `python explore_tags.py MS issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** MTB `ShareBasedCompensation`: 27 of 75 (36%)
 - **thin** MTB `StockRepurchased`: 36 of 75 (48%) -- `python explore_tags.py MTB repurchase treasurystock buyback`
-- **thin** PNC `StockIssued`: 11 of 74 (15%) -- `python explore_tags.py PNC issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **thin** PNC `ShareBasedCompensation`: 20 of 74 (27%)
-- **thin** PNC `DividendsPerShare`: 33 of 74 (45%) -- `python explore_tags.py PNC dividendspershare`
+- **thin** PNC `StockIssued`: 11 of 75 (15%) -- `python explore_tags.py PNC issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** PNC `ShareBasedCompensation`: 20 of 75 (27%)
+- **thin** PNC `DividendsPerShare`: 34 of 75 (45%) -- `python explore_tags.py PNC dividendspershare`
 - **MISSING** RF `ShareBasedCompensation`: 0 of 75 (0%)
 - **thin** RF `StockIssued`: 11 of 75 (15%) -- `python explore_tags.py RF issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** RJF `NoninterestIncome`: 22 of 70 (31%) -- `python explore_tags.py RJF noninterestincome`
@@ -259,7 +259,7 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** ADP `StockIssued`: 12 of 74 (16%) -- `python explore_tags.py ADP issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** ALLE `StockIssued`: 16 of 57 (28%) -- `python explore_tags.py ALLE issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** AOS `StockIssued`: 5 of 72 (7%) -- `python explore_tags.py AOS issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **thin** APTV `StockIssued`: 3 of 64 (5%) -- `python explore_tags.py APTV issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** APTV `StockIssued`: 3 of 65 (5%) -- `python explore_tags.py APTV issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** AXON `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py AXON dividendspershare`
 - **thin** AXON `LongTermDebt`: 17 of 67 (25%) -- `python explore_tags.py AXON longtermdebt borrowings notespayable`
 - **thin** AXON `StockRepurchased`: 23 of 67 (34%) -- `python explore_tags.py AXON repurchase treasurystock buyback`
@@ -271,8 +271,8 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** EMR `StockIssued`: 0 of 75 (0%) -- `python explore_tags.py EMR issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** EMR `OperatingIncomeLoss`: 0 of 75 (0%) -- `python explore_tags.py EMR operatingincome`
 - **thin** EMR `ShareBasedCompensation`: 31 of 75 (41%)
-- **MISSING** ETN `ShareBasedCompensation`: 0 of 61 (0%)
-- **thin** ETN `OperatingIncomeLoss`: 8 of 61 (13%) -- `python explore_tags.py ETN operatingincome`
+- **MISSING** ETN `ShareBasedCompensation`: 0 of 62 (0%)
+- **thin** ETN `OperatingIncomeLoss`: 8 of 62 (13%) -- `python explore_tags.py ETN operatingincome`
 - **MISSING** EXPD `LongTermDebt`: 0 of 76 (0%) -- `python explore_tags.py EXPD longtermdebt borrowings notespayable`
 - **thin** EXPD `DividendsPerShare`: 28 of 76 (37%) -- `python explore_tags.py EXPD dividendspershare`
 - **MISSING** FAST `Goodwill`: 0 of 76 (0%) -- `python explore_tags.py FAST goodwill intangible`
@@ -286,7 +286,7 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** GEV `StockIssued`: 2 of 17 (12%) -- `python explore_tags.py GEV issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** GEV `LongTermDebt`: 4 of 17 (24%) -- `python explore_tags.py GEV longtermdebt borrowings notespayable`
 - **thin** GEV `DividendsPerShare`: 5 of 17 (29%) -- `python explore_tags.py GEV dividendspershare`
-- **thin** GNRC `DividendsPerShare`: 6 of 66 (9%) -- `python explore_tags.py GNRC dividendspershare`
+- **thin** GNRC `DividendsPerShare`: 6 of 67 (9%) -- `python explore_tags.py GNRC dividendspershare`
 - **thin** HII `StockIssued`: 10 of 68 (15%) -- `python explore_tags.py HII issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** HON `OperatingIncomeLoss`: 22 of 76 (29%) -- `python explore_tags.py HON operatingincome`
 - **thin** HUBB `StockIssued`: 25 of 72 (35%) -- `python explore_tags.py HUBB issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -357,14 +357,14 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** CB `RealizedInvestmentGains`: 30 of 73 (41%) -- `python explore_tags.py CB realizedgain realizedinvestment`
 - **MISSING** CINF `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py CINF goodwill intangible`
 - **thin** CINF `DividendsPerShare`: 20 of 72 (28%) -- `python explore_tags.py CINF dividendspershare`
-- **MISSING** EG `DepreciationAndAmortization`: 0 of 71 (0%) -- `python explore_tags.py EG depreciation amortization`
 - **MISSING** EG `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py EG goodwill intangible`
+- **MISSING** EG `DepreciationAndAmortization`: 0 of 71 (0%) -- `python explore_tags.py EG depreciation amortization`
 - **thin** EG `Investments`: 15 of 71 (21%) -- `python explore_tags.py EG investments`
 - **thin** EG `StockIssued`: 34 of 71 (48%) -- `python explore_tags.py EG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** HIG `StockIssued`: 17 of 75 (23%) -- `python explore_tags.py HIG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** HIG `ShareBasedCompensation`: 24 of 75 (32%)
-- **MISSING** L `DepreciationAndAmortization`: 0 of 75 (0%) -- `python explore_tags.py L depreciation amortization`
 - **MISSING** L `RealizedInvestmentGains`: 0 of 75 (0%) -- `python explore_tags.py L realizedgain realizedinvestment`
+- **MISSING** L `DepreciationAndAmortization`: 0 of 75 (0%) -- `python explore_tags.py L depreciation amortization`
 - **thin** L `ShareBasedCompensation`: 25 of 75 (33%)
 - **thin** L `StockIssued`: 29 of 75 (39%) -- `python explore_tags.py L issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** PGR `ShareBasedCompensation`: 0 of 75 (0%)
@@ -396,7 +396,7 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 
 - **MISSING** ABNB `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py ABNB dividendspershare`
 - **thin** ABNB `Goodwill`: 13 of 28 (46%) -- `python explore_tags.py ABNB goodwill intangible`
-- **thin** BKNG `DividendsPerShare`: 10 of 71 (14%) -- `python explore_tags.py BKNG dividendspershare`
+- **thin** BKNG `DividendsPerShare`: 11 of 72 (15%) -- `python explore_tags.py BKNG dividendspershare`
 - **MISSING** DASH `DividendsPerShare`: 0 of 30 (0%) -- `python explore_tags.py DASH dividendspershare`
 - **thin** DASH `LongTermDebt`: 13 of 30 (43%) -- `python explore_tags.py DASH longtermdebt borrowings notespayable`
 - **MISSING** EBAY `DividendsPerShare`: 0 of 76 (0%) -- `python explore_tags.py EBAY dividendspershare`
@@ -406,23 +406,22 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 
 - **thin** ALB `StockRepurchased`: 32 of 71 (45%) -- `python explore_tags.py ALB repurchase treasurystock buyback`
 - **thin** APD `StockRepurchased`: 14 of 75 (19%) -- `python explore_tags.py APD repurchase treasurystock buyback`
-- **MISSING** CE `DividendsPerShare`: 0 of 74 (0%) -- `python explore_tags.py CE dividendspershare`
+- **MISSING** CE `DividendsPerShare`: 0 of 75 (0%) -- `python explore_tags.py CE dividendspershare`
 - **MISSING** CTVA `OperatingIncomeLoss`: 0 of 37 (0%) -- `python explore_tags.py CTVA operatingincome`
 - **thin** FCX `Goodwill`: 9 of 76 (12%) -- `python explore_tags.py FCX goodwill intangible`
 - **thin** FCX `StockRepurchased`: 22 of 76 (29%) -- `python explore_tags.py FCX repurchase treasurystock buyback`
-- **thin** IFF `StockRepurchased`: 33 of 71 (46%) -- `python explore_tags.py IFF repurchase treasurystock buyback`
 - **MISSING** LYB `StockIssued`: 0 of 64 (0%) -- `python explore_tags.py LYB issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** MLM `StockRepurchased`: 35 of 71 (49%) -- `python explore_tags.py MLM repurchase treasurystock buyback`
 - **thin** PKG `StockIssued`: 25 of 72 (35%) -- `python explore_tags.py PKG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** PKG `StockRepurchased`: 31 of 72 (43%) -- `python explore_tags.py PKG repurchase treasurystock buyback`
 - **thin** STLD `StockIssued`: 32 of 77 (42%) -- `python explore_tags.py STLD issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** STLD `StockRepurchased`: 38 of 77 (49%) -- `python explore_tags.py STLD repurchase treasurystock buyback`
-- **thin** SW `StockIssued`: 5 of 15 (33%) -- `python explore_tags.py SW issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** SW `StockIssued`: 7 of 16 (44%) -- `python explore_tags.py SW issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** VMC `StockIssued`: 32 of 75 (43%) -- `python explore_tags.py VMC issuanceofcommon stockissuedduringperiodvalue saleofequity`
 
 ### materials_integrated
 
-- **thin** BALL `ShareBasedCompensation`: 14 of 71 (20%)
+- **thin** BALL `ShareBasedCompensation`: 14 of 72 (19%)
 - **MISSING** DOW `ShareBasedCompensation`: 0 of 38 (0%)
 - **thin** IP `ShareBasedCompensation`: 28 of 73 (38%)
 - **thin** IP `StockIssued`: 32 of 73 (44%) -- `python explore_tags.py IP issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -433,11 +432,11 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 
 - **thin** DIS `DividendsPerShare`: 13 of 39 (33%) -- `python explore_tags.py DIS dividendspershare`
 - **MISSING** FOX `StockIssued`: 0 of 39 (0%) -- `python explore_tags.py FOX issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** FOX `DividendsPerShare`: 0 of 39 (0%) -- `python explore_tags.py FOX dividendspershare`
 - **MISSING** FOX `OperatingIncomeLoss`: 0 of 39 (0%) -- `python explore_tags.py FOX operatingincome`
+- **MISSING** FOX `DividendsPerShare`: 0 of 39 (0%) -- `python explore_tags.py FOX dividendspershare`
 - **MISSING** FOXA `StockIssued`: 0 of 39 (0%) -- `python explore_tags.py FOXA issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** FOXA `DividendsPerShare`: 0 of 39 (0%) -- `python explore_tags.py FOXA dividendspershare`
 - **MISSING** FOXA `OperatingIncomeLoss`: 0 of 39 (0%) -- `python explore_tags.py FOXA operatingincome`
+- **MISSING** FOXA `DividendsPerShare`: 0 of 39 (0%) -- `python explore_tags.py FOXA dividendspershare`
 - **MISSING** LYV `DividendsPerShare`: 0 of 68 (0%) -- `python explore_tags.py LYV dividendspershare`
 - **thin** LYV `StockRepurchased`: 8 of 68 (12%) -- `python explore_tags.py LYV repurchase treasurystock buyback`
 - **MISSING** NFLX `Goodwill`: 0 of 77 (0%) -- `python explore_tags.py NFLX goodwill intangible`
@@ -451,22 +450,22 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** NWSA `DividendsPerShare`: 11 of 58 (19%) -- `python explore_tags.py NWSA dividendspershare`
 - **thin** NWSA `ShareBasedCompensation`: 20 of 58 (34%)
 - **thin** OMC `LongTermDebt`: 35 of 76 (46%) -- `python explore_tags.py OMC longtermdebt borrowings notespayable`
+- **MISSING** TKO `Capex`: 0 of 19 (0%) -- `python explore_tags.py TKO propertyplant productiveassets`
 - **MISSING** TKO `StockIssued`: 0 of 19 (0%) -- `python explore_tags.py TKO issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** TKO `DividendsPerShare`: 0 of 19 (0%) -- `python explore_tags.py TKO dividendspershare`
-- **MISSING** TKO `Capex`: 0 of 19 (0%) -- `python explore_tags.py TKO propertyplant productiveassets`
 - **thin** TKO `StockRepurchased`: 5 of 19 (26%) -- `python explore_tags.py TKO repurchase treasurystock buyback`
+- **MISSING** TTD `LongTermDebt`: 0 of 46 (0%) -- `python explore_tags.py TTD longtermdebt borrowings notespayable`
 - **MISSING** TTD `Goodwill`: 0 of 46 (0%) -- `python explore_tags.py TTD goodwill intangible`
 - **MISSING** TTD `DividendsPerShare`: 0 of 46 (0%) -- `python explore_tags.py TTD dividendspershare`
-- **MISSING** TTD `LongTermDebt`: 0 of 46 (0%) -- `python explore_tags.py TTD longtermdebt borrowings notespayable`
 - **thin** TTD `StockRepurchased`: 22 of 46 (48%) -- `python explore_tags.py TTD repurchase treasurystock buyback`
 - **MISSING** TTWO `DividendsPerShare`: 0 of 73 (0%) -- `python explore_tags.py TTWO dividendspershare`
 - **thin** TTWO `StockRepurchased`: 17 of 73 (23%) -- `python explore_tags.py TTWO repurchase treasurystock buyback`
 
 ### pharma_medtech
 
-- **MISSING** ALGN `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py ALGN dividendspershare`
 - **MISSING** ALGN `LongTermDebt`: 0 of 71 (0%) -- `python explore_tags.py ALGN longtermdebt borrowings notespayable`
-- **thin** AMGN `StockIssued`: 28 of 75 (37%) -- `python explore_tags.py AMGN issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** ALGN `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py ALGN dividendspershare`
+- **thin** AMGN `StockIssued`: 28 of 76 (37%) -- `python explore_tags.py AMGN issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** BDX `StockIssued`: 1 of 75 (1%) -- `python explore_tags.py BDX issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** BIIB `DividendsPerShare`: 0 of 75 (0%) -- `python explore_tags.py BIIB dividendspershare`
 - **thin** BMY `StockIssued`: 15 of 76 (20%) -- `python explore_tags.py BMY issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -487,13 +486,13 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** INCY `StockRepurchased`: 4 of 69 (6%) -- `python explore_tags.py INCY repurchase treasurystock buyback`
 - **MISSING** IQV `ResearchAndDevelopment`: 0 of 61 (0%) -- `python explore_tags.py IQV researchanddevelopment rndexpense`
 - **MISSING** IQV `DividendsPerShare`: 0 of 61 (0%) -- `python explore_tags.py IQV dividendspershare`
-- **MISSING** ISRG `DividendsPerShare`: 0 of 76 (0%) -- `python explore_tags.py ISRG dividendspershare`
 - **MISSING** ISRG `LongTermDebt`: 0 of 76 (0%) -- `python explore_tags.py ISRG longtermdebt borrowings notespayable`
+- **MISSING** ISRG `DividendsPerShare`: 0 of 76 (0%) -- `python explore_tags.py ISRG dividendspershare`
 - **thin** JNJ `StockIssued`: 13 of 76 (17%) -- `python explore_tags.py JNJ issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** LLY `StockIssued`: 0 of 76 (0%) -- `python explore_tags.py LLY issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** LLY `Capex`: 28 of 76 (37%) -- `python explore_tags.py LLY propertyplant productiveassets`
 - **MISSING** MTD `DividendsPerShare`: 0 of 70 (0%) -- `python explore_tags.py MTD dividendspershare`
-- **thin** PFE `StockIssued`: 36 of 75 (48%) -- `python explore_tags.py PFE issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** PFE `StockIssued`: 36 of 76 (47%) -- `python explore_tags.py PFE issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** PODD `DividendsPerShare`: 0 of 66 (0%) -- `python explore_tags.py PODD dividendspershare`
 - **thin** PODD `StockRepurchased`: 11 of 66 (17%) -- `python explore_tags.py PODD repurchase treasurystock buyback`
 - **MISSING** REGN `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py REGN goodwill intangible`
@@ -503,12 +502,12 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** SOLV `StockRepurchased`: 4 of 16 (25%) -- `python explore_tags.py SOLV repurchase treasurystock buyback`
 - **thin** SYK `StockIssued`: 15 of 74 (20%) -- `python explore_tags.py SYK issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** TECH `StockRepurchased`: 31 of 70 (44%) -- `python explore_tags.py TECH repurchase treasurystock buyback`
-- **MISSING** VEEV `DividendsPerShare`: 0 of 60 (0%) -- `python explore_tags.py VEEV dividendspershare`
 - **MISSING** VEEV `LongTermDebt`: 0 of 60 (0%) -- `python explore_tags.py VEEV longtermdebt borrowings notespayable`
+- **MISSING** VEEV `DividendsPerShare`: 0 of 60 (0%) -- `python explore_tags.py VEEV dividendspershare`
 - **thin** VEEV `StockRepurchased`: 4 of 60 (7%) -- `python explore_tags.py VEEV repurchase treasurystock buyback`
 - **thin** VEEV `Capex`: 28 of 60 (47%) -- `python explore_tags.py VEEV propertyplant productiveassets`
-- **MISSING** VRTX `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py VRTX dividendspershare`
-- **thin** VRTX `LongTermDebt`: 3 of 72 (4%) -- `python explore_tags.py VRTX longtermdebt borrowings notespayable`
+- **MISSING** VRTX `DividendsPerShare`: 0 of 73 (0%) -- `python explore_tags.py VRTX dividendspershare`
+- **thin** VRTX `LongTermDebt`: 5 of 73 (7%) -- `python explore_tags.py VRTX longtermdebt borrowings notespayable`
 - **MISSING** WAT `DividendsPerShare`: 0 of 75 (0%) -- `python explore_tags.py WAT dividendspershare`
 - **thin** WAT `Capex`: 4 of 75 (5%) -- `python explore_tags.py WAT propertyplant productiveassets`
 - **MISSING** ZTS `StockIssued`: 0 of 60 (0%) -- `python explore_tags.py ZTS issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -521,37 +520,37 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 ### reit
 
 - **MISSING** AMT `GainLossOnSaleOfProperties`: 0 of 76 (0%)
-- **MISSING** ARE `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py ARE goodwill intangible`
-- **MISSING** ARE `PretaxIncome`: 0 of 72 (0%)
 - **MISSING** ARE `IncomeTaxExpense`: 0 of 72 (0%)
+- **MISSING** ARE `PretaxIncome`: 0 of 72 (0%)
+- **MISSING** ARE `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py ARE goodwill intangible`
 - **thin** ARE `StockRepurchased`: 11 of 72 (15%) -- `python explore_tags.py ARE repurchase treasurystock buyback`
-- **MISSING** BXP `Goodwill`: 0 of 75 (0%) -- `python explore_tags.py BXP goodwill intangible`
 - **MISSING** BXP `StockRepurchased`: 0 of 75 (0%) -- `python explore_tags.py BXP repurchase treasurystock buyback`
-- **MISSING** BXP `PretaxIncome`: 0 of 75 (0%)
 - **MISSING** BXP `IncomeTaxExpense`: 0 of 75 (0%)
+- **MISSING** BXP `PretaxIncome`: 0 of 75 (0%)
+- **MISSING** BXP `Goodwill`: 0 of 75 (0%) -- `python explore_tags.py BXP goodwill intangible`
 - **thin** BXP `DividendsPerShare`: 22 of 75 (29%) -- `python explore_tags.py BXP dividendspershare`
 - **MISSING** CCI `GainLossOnSaleOfProperties`: 0 of 75 (0%)
-- **MISSING** CPT `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py CPT goodwill intangible`
 - **MISSING** CPT `IncomeTaxExpense`: 0 of 71 (0%)
+- **MISSING** CPT `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py CPT goodwill intangible`
 - **thin** CPT `StockRepurchased`: 14 of 71 (20%) -- `python explore_tags.py CPT repurchase treasurystock buyback`
 - **thin** CPT `GainLossOnSaleOfProperties`: 19 of 71 (27%)
-- **MISSING** DLR `PretaxIncome`: 0 of 67 (0%)
 - **MISSING** DLR `StockRepurchased`: 0 of 67 (0%) -- `python explore_tags.py DLR repurchase treasurystock buyback`
-- **MISSING** DLR `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py DLR dividendspershare`
+- **MISSING** DLR `PretaxIncome`: 0 of 67 (0%)
 - **MISSING** DLR `ShareBasedCompensation`: 0 of 67 (0%)
+- **MISSING** DLR `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py DLR dividendspershare`
 - **thin** DLR `LongTermDebt`: 32 of 67 (48%) -- `python explore_tags.py DLR longtermdebt borrowings notespayable`
 - **thin** EQIX `GainLossOnSaleOfProperties`: 8 of 72 (11%)
 - **thin** EQIX `StockRepurchased`: 8 of 72 (11%) -- `python explore_tags.py EQIX repurchase treasurystock buyback`
-- **MISSING** ESS `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py ESS goodwill intangible`
 - **MISSING** ESS `IncomeTaxExpense`: 0 of 71 (0%)
+- **MISSING** ESS `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py ESS goodwill intangible`
 - **thin** ESS `PretaxIncome`: 4 of 71 (6%)
 - **thin** EXR `GainLossOnSaleOfProperties`: 9 of 73 (12%)
 - **thin** EXR `Goodwill`: 19 of 73 (26%) -- `python explore_tags.py EXR goodwill intangible`
 - **thin** EXR `StockRepurchased`: 29 of 73 (40%) -- `python explore_tags.py EXR repurchase treasurystock buyback`
-- **MISSING** FRT `Goodwill`: 0 of 70 (0%) -- `python explore_tags.py FRT goodwill intangible`
 - **MISSING** FRT `StockRepurchased`: 0 of 70 (0%) -- `python explore_tags.py FRT repurchase treasurystock buyback`
-- **MISSING** FRT `PretaxIncome`: 0 of 70 (0%)
 - **MISSING** FRT `IncomeTaxExpense`: 0 of 70 (0%)
+- **MISSING** FRT `PretaxIncome`: 0 of 70 (0%)
+- **MISSING** FRT `Goodwill`: 0 of 70 (0%) -- `python explore_tags.py FRT goodwill intangible`
 - **thin** FRT `LongTermDebt`: 16 of 70 (23%) -- `python explore_tags.py FRT longtermdebt borrowings notespayable`
 - **thin** FRT `GainLossOnSaleOfProperties`: 26 of 70 (37%)
 - **MISSING** HST `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py HST goodwill intangible`
@@ -589,16 +588,16 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** SBAC `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py SBAC goodwill intangible`
 - **MISSING** SBAC `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py SBAC dividendspershare`
 - **thin** SBAC `GainLossOnSaleOfProperties`: 1 of 71 (1%)
-- **MISSING** SPG `GainLossOnSaleOfProperties`: 0 of 75 (0%)
 - **MISSING** SPG `PretaxIncome`: 0 of 75 (0%)
+- **MISSING** SPG `GainLossOnSaleOfProperties`: 0 of 75 (0%)
 - **MISSING** SPG `ShareBasedCompensation`: 0 of 75 (0%)
 - **thin** SPG `Goodwill`: 17 of 75 (23%) -- `python explore_tags.py SPG goodwill intangible`
 - **thin** SPG `StockRepurchased`: 26 of 75 (35%) -- `python explore_tags.py SPG repurchase treasurystock buyback`
 - **thin** SPG `StockIssued`: 27 of 75 (36%) -- `python explore_tags.py SPG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** SPG `IncomeTaxExpense`: 31 of 75 (41%)
 - **thin** SPG `DividendsPerShare`: 35 of 75 (47%) -- `python explore_tags.py SPG dividendspershare`
-- **MISSING** UDR `Goodwill`: 0 of 70 (0%) -- `python explore_tags.py UDR goodwill intangible`
-- **thin** UDR `StockRepurchased`: 11 of 70 (16%) -- `python explore_tags.py UDR repurchase treasurystock buyback`
+- **MISSING** UDR `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py UDR goodwill intangible`
+- **thin** UDR `StockRepurchased`: 13 of 72 (18%) -- `python explore_tags.py UDR repurchase treasurystock buyback`
 - **MISSING** VICI `StockRepurchased`: 0 of 38 (0%) -- `python explore_tags.py VICI repurchase treasurystock buyback`
 - **MISSING** VICI `GainLossOnSaleOfProperties`: 0 of 38 (0%)
 - **MISSING** VICI `Goodwill`: 0 of 38 (0%) -- `python explore_tags.py VICI goodwill intangible`
@@ -620,7 +619,7 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** GPC `OperatingIncomeLoss`: 22 of 75 (29%) -- `python explore_tags.py GPC operatingincome`
 - **MISSING** GRMN `LongTermDebt`: 0 of 76 (0%) -- `python explore_tags.py GRMN longtermdebt borrowings notespayable`
 - **thin** GRMN `DividendsPerShare`: 27 of 76 (36%) -- `python explore_tags.py GRMN dividendspershare`
-- **MISSING** HSIC `DividendsPerShare`: 0 of 70 (0%) -- `python explore_tags.py HSIC dividendspershare`
+- **MISSING** HSIC `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py HSIC dividendspershare`
 - **thin** LOW `AccountsReceivable`: 8 of 75 (11%) -- `python explore_tags.py LOW accountsreceivable receivablesnet`
 - **MISSING** LULU `DividendsPerShare`: 0 of 70 (0%) -- `python explore_tags.py LULU dividendspershare`
 - **thin** LULU `LongTermDebt`: 21 of 70 (30%) -- `python explore_tags.py LULU longtermdebt borrowings notespayable`
@@ -641,29 +640,29 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 
 ### standard
 
-- **MISSING** AAOI `Goodwill`: 0 of 58 (0%) -- `python explore_tags.py AAOI goodwill intangible`
 - **MISSING** AAOI `StockRepurchased`: 0 of 58 (0%) -- `python explore_tags.py AAOI repurchase treasurystock buyback`
+- **MISSING** AAOI `Goodwill`: 0 of 58 (0%) -- `python explore_tags.py AAOI goodwill intangible`
 - **MISSING** AAOI `DividendsPerShare`: 0 of 58 (0%) -- `python explore_tags.py AAOI dividendspershare`
-- **thin** AAPL `Goodwill`: 36 of 75 (48%) -- `python explore_tags.py AAPL goodwill intangible`
-- **MISSING** ACT `DepreciationAndAmortization`: 0 of 27 (0%) -- `python explore_tags.py ACT depreciation amortization`
+- **thin** AAPL `Goodwill`: 36 of 76 (47%) -- `python explore_tags.py AAPL goodwill intangible`
 - **MISSING** ACT `OperatingIncomeLoss`: 0 of 27 (0%) -- `python explore_tags.py ACT operatingincome`
-- **MISSING** ACT `Capex`: 0 of 27 (0%) -- `python explore_tags.py ACT propertyplant productiveassets`
-- **MISSING** ACT `StockIssued`: 0 of 27 (0%) -- `python explore_tags.py ACT issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** ACT `Goodwill`: 0 of 27 (0%) -- `python explore_tags.py ACT goodwill intangible`
+- **MISSING** ACT `DepreciationAndAmortization`: 0 of 27 (0%) -- `python explore_tags.py ACT depreciation amortization`
+- **MISSING** ACT `StockIssued`: 0 of 27 (0%) -- `python explore_tags.py ACT issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** ACT `Capex`: 0 of 27 (0%) -- `python explore_tags.py ACT propertyplant productiveassets`
 - **MISSING** ADBE `DividendsPerShare`: 0 of 76 (0%) -- `python explore_tags.py ADBE dividendspershare`
 - **MISSING** ADSK `DividendsPerShare`: 0 of 76 (0%) -- `python explore_tags.py ADSK dividendspershare`
 - **MISSING** AJG `OperatingIncomeLoss`: 0 of 68 (0%) -- `python explore_tags.py AJG operatingincome`
 - **thin** AJG `StockRepurchased`: 22 of 68 (32%) -- `python explore_tags.py AJG repurchase treasurystock buyback`
 - **thin** AJG `Capex`: 31 of 68 (46%) -- `python explore_tags.py AJG propertyplant productiveassets`
 - **MISSING** AKAM `DividendsPerShare`: 0 of 74 (0%) -- `python explore_tags.py AKAM dividendspershare`
-- **MISSING** ALAB `DividendsPerShare`: 0 of 16 (0%) -- `python explore_tags.py ALAB dividendspershare`
-- **MISSING** ALAB `LongTermDebt`: 0 of 16 (0%) -- `python explore_tags.py ALAB longtermdebt borrowings notespayable`
-- **thin** ALAB `Goodwill`: 3 of 16 (19%) -- `python explore_tags.py ALAB goodwill intangible`
-- **thin** ALAB `StockRepurchased`: 6 of 16 (38%) -- `python explore_tags.py ALAB repurchase treasurystock buyback`
+- **MISSING** ALAB `LongTermDebt`: 0 of 17 (0%) -- `python explore_tags.py ALAB longtermdebt borrowings notespayable`
+- **MISSING** ALAB `DividendsPerShare`: 0 of 17 (0%) -- `python explore_tags.py ALAB dividendspershare`
+- **thin** ALAB `Goodwill`: 4 of 17 (24%) -- `python explore_tags.py ALAB goodwill intangible`
+- **thin** ALAB `StockRepurchased`: 6 of 17 (35%) -- `python explore_tags.py ALAB repurchase treasurystock buyback`
 - **MISSING** ALGM `DividendsPerShare`: 0 of 31 (0%) -- `python explore_tags.py ALGM dividendspershare`
 - **thin** ALGM `StockRepurchased`: 4 of 31 (13%) -- `python explore_tags.py ALGM repurchase treasurystock buyback`
-- **MISSING** AMD `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py AMD dividendspershare`
-- **thin** AMD `StockRepurchased`: 23 of 71 (32%) -- `python explore_tags.py AMD repurchase treasurystock buyback`
+- **MISSING** AMD `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py AMD dividendspershare`
+- **thin** AMD `StockRepurchased`: 24 of 72 (33%) -- `python explore_tags.py AMD repurchase treasurystock buyback`
 - **thin** AMKR `StockRepurchased`: 16 of 72 (22%) -- `python explore_tags.py AMKR repurchase treasurystock buyback`
 - **thin** AMKR `DividendsPerShare`: 23 of 72 (32%) -- `python explore_tags.py AMKR dividendspershare`
 - **thin** AMKR `StockIssued`: 30 of 72 (42%) -- `python explore_tags.py AMKR issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -674,8 +673,8 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** AMZN `StockIssued`: 0 of 79 (0%) -- `python explore_tags.py AMZN issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** AMZN `DividendsPerShare`: 0 of 79 (0%) -- `python explore_tags.py AMZN dividendspershare`
 - **thin** AMZN `StockRepurchased`: 25 of 79 (32%) -- `python explore_tags.py AMZN repurchase treasurystock buyback`
-- **MISSING** ANET `DividendsPerShare`: 0 of 55 (0%) -- `python explore_tags.py ANET dividendspershare`
-- **thin** ANET `LongTermDebt`: 4 of 55 (7%) -- `python explore_tags.py ANET longtermdebt borrowings notespayable`
+- **MISSING** ANET `DividendsPerShare`: 0 of 56 (0%) -- `python explore_tags.py ANET dividendspershare`
+- **thin** ANET `LongTermDebt`: 4 of 56 (7%) -- `python explore_tags.py ANET longtermdebt borrowings notespayable`
 - **thin** AON `PretaxIncome`: 27 of 76 (36%)
 - **MISSING** APLD `DividendsPerShare`: 0 of 25 (0%) -- `python explore_tags.py APLD dividendspershare`
 - **thin** APLD `LongTermDebt`: 1 of 25 (4%) -- `python explore_tags.py APLD longtermdebt borrowings notespayable`
@@ -687,19 +686,19 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** APPF `StockRepurchased`: 23 of 52 (44%) -- `python explore_tags.py APPF repurchase treasurystock buyback`
 - **MISSING** ARW `DividendsPerShare`: 0 of 70 (0%) -- `python explore_tags.py ARW dividendspershare`
 - **MISSING** AUR `StockRepurchased`: 0 of 27 (0%) -- `python explore_tags.py AUR repurchase treasurystock buyback`
-- **MISSING** AUR `DividendsPerShare`: 0 of 27 (0%) -- `python explore_tags.py AUR dividendspershare`
 - **MISSING** AUR `LongTermDebt`: 0 of 27 (0%) -- `python explore_tags.py AUR longtermdebt borrowings notespayable`
+- **MISSING** AUR `DividendsPerShare`: 0 of 27 (0%) -- `python explore_tags.py AUR dividendspershare`
 - **thin** AUR `Goodwill`: 8 of 27 (30%) -- `python explore_tags.py AUR goodwill intangible`
 - **MISSING** AVT `StockIssued`: 0 of 74 (0%) -- `python explore_tags.py AVT issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** AXTI `LongTermDebt`: 0 of 67 (0%) -- `python explore_tags.py AXTI longtermdebt borrowings notespayable`
 - **MISSING** AXTI `Goodwill`: 0 of 67 (0%) -- `python explore_tags.py AXTI goodwill intangible`
 - **MISSING** AXTI `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py AXTI dividendspershare`
-- **MISSING** AXTI `LongTermDebt`: 0 of 67 (0%) -- `python explore_tags.py AXTI longtermdebt borrowings notespayable`
 - **thin** AXTI `StockRepurchased`: 11 of 67 (16%) -- `python explore_tags.py AXTI repurchase treasurystock buyback`
 - **thin** BLK `StockRepurchased`: 7 of 15 (47%) -- `python explore_tags.py BLK repurchase treasurystock buyback`
 - **MISSING** BRO `OperatingIncomeLoss`: 0 of 73 (0%) -- `python explore_tags.py BRO operatingincome`
 - **MISSING** CACI `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py CACI dividendspershare`
-- **MISSING** CART `DividendsPerShare`: 0 of 20 (0%) -- `python explore_tags.py CART dividendspershare`
 - **MISSING** CART `LongTermDebt`: 0 of 20 (0%) -- `python explore_tags.py CART longtermdebt borrowings notespayable`
+- **MISSING** CART `DividendsPerShare`: 0 of 20 (0%) -- `python explore_tags.py CART dividendspershare`
 - **MISSING** CBRE `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py CBRE dividendspershare`
 - **thin** CBRE `StockIssued`: 15 of 72 (21%) -- `python explore_tags.py CBRE issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** CDNS `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py CDNS dividendspershare`
@@ -720,10 +719,10 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** COMP `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py COMP dividendspershare`
 - **thin** COMP `LongTermDebt`: 3 of 28 (11%) -- `python explore_tags.py COMP longtermdebt borrowings notespayable`
 - **MISSING** CPAY `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py CPAY dividendspershare`
-- **MISSING** CPNG `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py CPNG dividendspershare`
-- **thin** CPNG `Goodwill`: 8 of 28 (29%) -- `python explore_tags.py CPNG goodwill intangible`
-- **MISSING** CRDO `DividendsPerShare`: 0 of 27 (0%) -- `python explore_tags.py CRDO dividendspershare`
+- **MISSING** CPNG `DividendsPerShare`: 0 of 29 (0%) -- `python explore_tags.py CPNG dividendspershare`
+- **thin** CPNG `Goodwill`: 8 of 29 (28%) -- `python explore_tags.py CPNG goodwill intangible`
 - **MISSING** CRDO `LongTermDebt`: 0 of 27 (0%) -- `python explore_tags.py CRDO longtermdebt borrowings notespayable`
+- **MISSING** CRDO `DividendsPerShare`: 0 of 27 (0%) -- `python explore_tags.py CRDO dividendspershare`
 - **thin** CRDO `StockRepurchased`: 1 of 27 (4%) -- `python explore_tags.py CRDO repurchase treasurystock buyback`
 - **thin** CRDO `Goodwill`: 5 of 27 (19%) -- `python explore_tags.py CRDO goodwill intangible`
 - **thin** CRM `DividendsPerShare`: 10 of 77 (13%) -- `python explore_tags.py CRM dividendspershare`
@@ -738,16 +737,15 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** DDOG `StockRepurchased`: 0 of 35 (0%) -- `python explore_tags.py DDOG repurchase treasurystock buyback`
 - **MISSING** DDOG `DividendsPerShare`: 0 of 35 (0%) -- `python explore_tags.py DDOG dividendspershare`
 - **thin** DELL `DividendsPerShare`: 18 of 48 (38%) -- `python explore_tags.py DELL dividendspershare`
-- **MISSING** DOCN `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py DOCN dividendspershare`
+- **MISSING** DOCN `DividendsPerShare`: 0 of 29 (0%) -- `python explore_tags.py DOCN dividendspershare`
 - **MISSING** DOCU `DividendsPerShare`: 0 of 38 (0%) -- `python explore_tags.py DOCU dividendspershare`
-- **MISSING** DT `DividendsPerShare`: 0 of 35 (0%) -- `python explore_tags.py DT dividendspershare`
-- **thin** DT `LongTermDebt`: 17 of 35 (49%) -- `python explore_tags.py DT longtermdebt borrowings notespayable`
+- **MISSING** DT `DividendsPerShare`: 0 of 36 (0%) -- `python explore_tags.py DT dividendspershare`
+- **MISSING** ERIE `Goodwill`: 0 of 69 (0%) -- `python explore_tags.py ERIE goodwill intangible`
 - **MISSING** ERIE `DepreciationAndAmortization`: 0 of 69 (0%) -- `python explore_tags.py ERIE depreciation amortization`
+- **MISSING** ERIE `StockIssued`: 0 of 69 (0%) -- `python explore_tags.py ERIE issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** ERIE `ShareBasedCompensation`: 0 of 69 (0%)
 - **MISSING** ERIE `DividendsPerShare`: 0 of 69 (0%) -- `python explore_tags.py ERIE dividendspershare`
 - **MISSING** ERIE `SharesOutstanding`: 0 of 69 (0%) -- `python explore_tags.py ERIE sharesoutstanding`
-- **MISSING** ERIE `StockIssued`: 0 of 69 (0%) -- `python explore_tags.py ERIE issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** ERIE `Goodwill`: 0 of 69 (0%) -- `python explore_tags.py ERIE goodwill intangible`
 - **thin** ERIE `LongTermDebt`: 25 of 69 (36%) -- `python explore_tags.py ERIE longtermdebt borrowings notespayable`
 - **thin** ERIE `StockRepurchased`: 25 of 69 (36%) -- `python explore_tags.py ERIE repurchase treasurystock buyback`
 - **thin** ESE `OperatingIncomeLoss`: 2 of 72 (3%) -- `python explore_tags.py ESE operatingincome`
@@ -756,15 +754,15 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** ESTC `DividendsPerShare`: 0 of 38 (0%) -- `python explore_tags.py ESTC dividendspershare`
 - **thin** ESTC `StockRepurchased`: 8 of 38 (21%) -- `python explore_tags.py ESTC repurchase treasurystock buyback`
 - **MISSING** ETSY `DividendsPerShare`: 0 of 53 (0%) -- `python explore_tags.py ETSY dividendspershare`
-- **MISSING** EVR `LongTermDebt`: 0 of 67 (0%) -- `python explore_tags.py EVR longtermdebt borrowings notespayable`
 - **MISSING** EVR `OperatingIncomeLoss`: 0 of 67 (0%) -- `python explore_tags.py EVR operatingincome`
+- **MISSING** EVR `LongTermDebt`: 0 of 67 (0%) -- `python explore_tags.py EVR longtermdebt borrowings notespayable`
 - **thin** EVR `StockIssued`: 1 of 67 (1%) -- `python explore_tags.py EVR issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** FDS `DividendsPerShare`: 22 of 70 (31%) -- `python explore_tags.py FDS dividendspershare`
 - **MISSING** FFIV `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py FFIV dividendspershare`
 - **thin** FFIV `LongTermDebt`: 12 of 71 (17%) -- `python explore_tags.py FFIV longtermdebt borrowings notespayable`
 - **thin** FICO `DividendsPerShare`: 11 of 71 (15%) -- `python explore_tags.py FICO dividendspershare`
-- **MISSING** FIG `DividendsPerShare`: 0 of 12 (0%) -- `python explore_tags.py FIG dividendspershare`
 - **MISSING** FIG `LongTermDebt`: 0 of 12 (0%) -- `python explore_tags.py FIG longtermdebt borrowings notespayable`
+- **MISSING** FIG `DividendsPerShare`: 0 of 12 (0%) -- `python explore_tags.py FIG dividendspershare`
 - **thin** FIG `StockRepurchased`: 3 of 12 (25%) -- `python explore_tags.py FIG repurchase treasurystock buyback`
 - **MISSING** FISV `DividendsPerShare`: 0 of 75 (0%) -- `python explore_tags.py FISV dividendspershare`
 - **thin** FISV `DepreciationAndAmortization`: 30 of 75 (40%) -- `python explore_tags.py FISV depreciation amortization`
@@ -772,14 +770,14 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** FLEX `OperatingIncomeLoss`: 25 of 76 (33%) -- `python explore_tags.py FLEX operatingincome`
 - **thin** FLEX `NetIncomeLoss`: 37 of 76 (49%) -- `python explore_tags.py FLEX netincome`
 - **MISSING** FLUT `DividendsPerShare`: 0 of 16 (0%) -- `python explore_tags.py FLUT dividendspershare`
-- **MISSING** FN `DividendsPerShare`: 0 of 66 (0%) -- `python explore_tags.py FN dividendspershare`
-- **thin** FN `Goodwill`: 16 of 66 (24%) -- `python explore_tags.py FN goodwill intangible`
-- **thin** FN `StockRepurchased`: 25 of 66 (38%) -- `python explore_tags.py FN repurchase treasurystock buyback`
-- **thin** FN `LongTermDebt`: 26 of 66 (39%) -- `python explore_tags.py FN longtermdebt borrowings notespayable`
-- **thin** FN `StockIssued`: 32 of 66 (48%) -- `python explore_tags.py FN issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** FORM `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py FORM dividendspershare`
-- **MISSING** FROG `DividendsPerShare`: 0 of 31 (0%) -- `python explore_tags.py FROG dividendspershare`
+- **MISSING** FN `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py FN dividendspershare`
+- **thin** FN `Goodwill`: 16 of 67 (24%) -- `python explore_tags.py FN goodwill intangible`
+- **thin** FN `StockRepurchased`: 26 of 67 (39%) -- `python explore_tags.py FN repurchase treasurystock buyback`
+- **thin** FN `LongTermDebt`: 28 of 67 (42%) -- `python explore_tags.py FN longtermdebt borrowings notespayable`
+- **thin** FN `StockIssued`: 32 of 67 (48%) -- `python explore_tags.py FN issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** FORM `DividendsPerShare`: 0 of 68 (0%) -- `python explore_tags.py FORM dividendspershare`
 - **MISSING** FROG `LongTermDebt`: 0 of 31 (0%) -- `python explore_tags.py FROG longtermdebt borrowings notespayable`
+- **MISSING** FROG `DividendsPerShare`: 0 of 31 (0%) -- `python explore_tags.py FROG dividendspershare`
 - **thin** FROG `StockRepurchased`: 1 of 31 (3%) -- `python explore_tags.py FROG repurchase treasurystock buyback`
 - **MISSING** FSLR `StockRepurchased`: 0 of 75 (0%) -- `python explore_tags.py FSLR repurchase treasurystock buyback`
 - **MISSING** FSLR `DividendsPerShare`: 0 of 75 (0%) -- `python explore_tags.py FSLR dividendspershare`
@@ -793,16 +791,16 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** GOOGL `DividendsPerShare`: 9 of 51 (18%) -- `python explore_tags.py GOOGL dividendspershare`
 - **thin** GOOGL `DepreciationAndAmortization`: 15 of 51 (29%) -- `python explore_tags.py GOOGL depreciation amortization`
 - **thin** GOOGL `StockIssued`: 23 of 51 (45%) -- `python explore_tags.py GOOGL issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** GTLB `DividendsPerShare`: 0 of 27 (0%) -- `python explore_tags.py GTLB dividendspershare`
 - **MISSING** GTLB `LongTermDebt`: 0 of 27 (0%) -- `python explore_tags.py GTLB longtermdebt borrowings notespayable`
+- **MISSING** GTLB `DividendsPerShare`: 0 of 27 (0%) -- `python explore_tags.py GTLB dividendspershare`
 - **thin** GTLB `StockRepurchased`: 12 of 27 (44%) -- `python explore_tags.py GTLB repurchase treasurystock buyback`
 - **MISSING** GWRE `DividendsPerShare`: 0 of 64 (0%) -- `python explore_tags.py GWRE dividendspershare`
 - **thin** GWRE `StockRepurchased`: 25 of 64 (39%) -- `python explore_tags.py GWRE repurchase treasurystock buyback`
 - **thin** GWRE `LongTermDebt`: 28 of 64 (44%) -- `python explore_tags.py GWRE longtermdebt borrowings notespayable`
 - **thin** HLI `StockIssued`: 22 of 51 (43%) -- `python explore_tags.py HLI issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** HLI `LongTermDebt`: 25 of 51 (49%) -- `python explore_tags.py HLI longtermdebt borrowings notespayable`
-- **MISSING** HNGE `DividendsPerShare`: 0 of 12 (0%) -- `python explore_tags.py HNGE dividendspershare`
 - **MISSING** HNGE `LongTermDebt`: 0 of 12 (0%) -- `python explore_tags.py HNGE longtermdebt borrowings notespayable`
+- **MISSING** HNGE `DividendsPerShare`: 0 of 12 (0%) -- `python explore_tags.py HNGE dividendspershare`
 - **thin** HNGE `StockRepurchased`: 5 of 12 (42%) -- `python explore_tags.py HNGE repurchase treasurystock buyback`
 - **thin** HPE `StockIssued`: 18 of 50 (36%) -- `python explore_tags.py HPE issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** HPQ `StockIssued`: 32 of 75 (43%) -- `python explore_tags.py HPQ issuanceofcommon stockissuedduringperiodvalue saleofequity`
@@ -814,15 +812,15 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** IBM `OperatingIncomeLoss`: 0 of 76 (0%) -- `python explore_tags.py IBM operatingincome`
 - **thin** IDCC `Goodwill`: 28 of 72 (39%) -- `python explore_tags.py IDCC goodwill intangible`
 - **MISSING** IONQ `StockRepurchased`: 0 of 24 (0%) -- `python explore_tags.py IONQ repurchase treasurystock buyback`
-- **MISSING** IONQ `DividendsPerShare`: 0 of 24 (0%) -- `python explore_tags.py IONQ dividendspershare`
 - **MISSING** IONQ `LongTermDebt`: 0 of 24 (0%) -- `python explore_tags.py IONQ longtermdebt borrowings notespayable`
+- **MISSING** IONQ `DividendsPerShare`: 0 of 24 (0%) -- `python explore_tags.py IONQ dividendspershare`
+- **MISSING** IOT `LongTermDebt`: 0 of 24 (0%) -- `python explore_tags.py IOT longtermdebt borrowings notespayable`
 - **MISSING** IOT `Goodwill`: 0 of 24 (0%) -- `python explore_tags.py IOT goodwill intangible`
 - **MISSING** IOT `DividendsPerShare`: 0 of 24 (0%) -- `python explore_tags.py IOT dividendspershare`
-- **MISSING** IOT `LongTermDebt`: 0 of 24 (0%) -- `python explore_tags.py IOT longtermdebt borrowings notespayable`
 - **thin** IOT `StockRepurchased`: 8 of 24 (33%) -- `python explore_tags.py IOT repurchase treasurystock buyback`
-- **MISSING** IT `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py IT dividendspershare`
-- **MISSING** IT `Capex`: 0 of 71 (0%) -- `python explore_tags.py IT propertyplant productiveassets`
-- **thin** IVZ `StockIssued`: 35 of 75 (47%) -- `python explore_tags.py IVZ issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **MISSING** IT `Capex`: 0 of 72 (0%) -- `python explore_tags.py IT propertyplant productiveassets`
+- **MISSING** IT `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py IT dividendspershare`
+- **thin** IVZ `StockIssued`: 35 of 76 (46%) -- `python explore_tags.py IVZ issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** JBL `StockIssued`: 30 of 70 (43%) -- `python explore_tags.py JBL issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** JLL `DividendsPerShare`: 16 of 72 (22%) -- `python explore_tags.py JLL dividendspershare`
 - **thin** JLL `Capex`: 23 of 72 (32%) -- `python explore_tags.py JLL propertyplant productiveassets`
@@ -830,24 +828,24 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** JLL `StockRepurchased`: 31 of 72 (43%) -- `python explore_tags.py JLL repurchase treasurystock buyback`
 - **MISSING** KEYS `DividendsPerShare`: 0 of 52 (0%) -- `python explore_tags.py KEYS dividendspershare`
 - **thin** KLAC `OperatingIncomeLoss`: 23 of 71 (32%) -- `python explore_tags.py KLAC operatingincome`
-- **MISSING** LITE `DividendsPerShare`: 0 of 52 (0%) -- `python explore_tags.py LITE dividendspershare`
-- **thin** LITE `StockRepurchased`: 19 of 52 (37%) -- `python explore_tags.py LITE repurchase treasurystock buyback`
+- **MISSING** LITE `DividendsPerShare`: 0 of 53 (0%) -- `python explore_tags.py LITE dividendspershare`
+- **thin** LITE `StockRepurchased`: 19 of 53 (36%) -- `python explore_tags.py LITE repurchase treasurystock buyback`
 - **MISSING** LNWO `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py LNWO dividendspershare`
 - **thin** LNWO `StockIssued`: 18 of 71 (25%) -- `python explore_tags.py LNWO issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** LOGI `LongTermDebt`: 0 of 72 (0%) -- `python explore_tags.py LOGI longtermdebt borrowings notespayable`
 - **thin** LOGI `DividendsPerShare`: 29 of 72 (40%) -- `python explore_tags.py LOGI dividendspershare`
 - **thin** LOGI `StockIssued`: 33 of 72 (46%) -- `python explore_tags.py LOGI issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** LPLA `OperatingIncomeLoss`: 0 of 68 (0%) -- `python explore_tags.py LPLA operatingincome`
-- **MISSING** LSCC `DividendsPerShare`: 0 of 67 (0%) -- `python explore_tags.py LSCC dividendspershare`
-- **MISSING** LYFT `DividendsPerShare`: 0 of 36 (0%) -- `python explore_tags.py LYFT dividendspershare`
+- **MISSING** LSCC `DividendsPerShare`: 0 of 68 (0%) -- `python explore_tags.py LSCC dividendspershare`
 - **MISSING** LYFT `Capex`: 0 of 36 (0%) -- `python explore_tags.py LYFT propertyplant productiveassets`
+- **MISSING** LYFT `DividendsPerShare`: 0 of 36 (0%) -- `python explore_tags.py LYFT dividendspershare`
 - **thin** LYFT `StockRepurchased`: 14 of 36 (39%) -- `python explore_tags.py LYFT repurchase treasurystock buyback`
-- **MISSING** MANH `DividendsPerShare`: 0 of 68 (0%) -- `python explore_tags.py MANH dividendspershare`
 - **MISSING** MANH `LongTermDebt`: 0 of 68 (0%) -- `python explore_tags.py MANH longtermdebt borrowings notespayable`
+- **MISSING** MANH `DividendsPerShare`: 0 of 68 (0%) -- `python explore_tags.py MANH dividendspershare`
 - **thin** MANH `StockIssued`: 25 of 68 (37%) -- `python explore_tags.py MANH issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** MBLY `StockIssued`: 0 of 24 (0%) -- `python explore_tags.py MBLY issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** MBLY `DividendsPerShare`: 0 of 24 (0%) -- `python explore_tags.py MBLY dividendspershare`
 - **MISSING** MBLY `LongTermDebt`: 0 of 24 (0%) -- `python explore_tags.py MBLY longtermdebt borrowings notespayable`
+- **MISSING** MBLY `DividendsPerShare`: 0 of 24 (0%) -- `python explore_tags.py MBLY dividendspershare`
 - **thin** MBLY `StockRepurchased`: 3 of 24 (12%) -- `python explore_tags.py MBLY repurchase treasurystock buyback`
 - **thin** MCHP `StockRepurchased`: 32 of 75 (43%) -- `python explore_tags.py MCHP repurchase treasurystock buyback`
 - **MISSING** MDB `DividendsPerShare`: 0 of 40 (0%) -- `python explore_tags.py MDB dividendspershare`
@@ -858,8 +856,8 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** META `DividendsPerShare`: 11 of 64 (17%) -- `python explore_tags.py META dividendspershare`
 - **thin** META `LongTermDebt`: 24 of 64 (38%) -- `python explore_tags.py META longtermdebt borrowings notespayable`
 - **thin** META `StockIssued`: 26 of 64 (41%) -- `python explore_tags.py META issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** MPWR `LongTermDebt`: 0 of 67 (0%) -- `python explore_tags.py MPWR longtermdebt borrowings notespayable`
-- **thin** MPWR `StockRepurchased`: 26 of 67 (39%) -- `python explore_tags.py MPWR repurchase treasurystock buyback`
+- **MISSING** MPWR `LongTermDebt`: 0 of 68 (0%) -- `python explore_tags.py MPWR longtermdebt borrowings notespayable`
+- **thin** MPWR `StockRepurchased`: 27 of 68 (40%) -- `python explore_tags.py MPWR repurchase treasurystock buyback`
 - **MISSING** MRVL `PretaxIncome`: 0 of 28 (0%)
 - **thin** MTCH `DividendsPerShare`: 28 of 72 (39%) -- `python explore_tags.py MTCH dividendspershare`
 - **MISSING** MTSI `DividendsPerShare`: 0 of 64 (0%) -- `python explore_tags.py MTSI dividendspershare`
@@ -884,12 +882,12 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** ORCL `PretaxIncome`: 25 of 75 (33%)
 - **MISSING** P `DividendsPerShare`: 0 of 50 (0%) -- `python explore_tags.py P dividendspershare`
 - **MISSING** PANW `DividendsPerShare`: 0 of 62 (0%) -- `python explore_tags.py PANW dividendspershare`
-- **MISSING** PATH `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py PATH dividendspershare`
 - **MISSING** PATH `LongTermDebt`: 0 of 28 (0%) -- `python explore_tags.py PATH longtermdebt borrowings notespayable`
+- **MISSING** PATH `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py PATH dividendspershare`
 - **thin** PAYC `StockIssued`: 3 of 56 (5%) -- `python explore_tags.py PAYC issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **thin** PAYC `DividendsPerShare`: 12 of 56 (21%) -- `python explore_tags.py PAYC dividendspershare`
-- **MISSING** PCOR `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py PCOR dividendspershare`
 - **MISSING** PCOR `LongTermDebt`: 0 of 28 (0%) -- `python explore_tags.py PCOR longtermdebt borrowings notespayable`
+- **MISSING** PCOR `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py PCOR dividendspershare`
 - **thin** PCOR `StockRepurchased`: 10 of 28 (36%) -- `python explore_tags.py PCOR repurchase treasurystock buyback`
 - **MISSING** PCTY `DividendsPerShare`: 0 of 57 (0%) -- `python explore_tags.py PCTY dividendspershare`
 - **thin** PCTY `LongTermDebt`: 13 of 57 (23%) -- `python explore_tags.py PCTY longtermdebt borrowings notespayable`
@@ -915,16 +913,16 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** Q `StockRepurchased`: 4 of 11 (36%) -- `python explore_tags.py Q repurchase treasurystock buyback`
 - **thin** Q `CashAndEquivalents`: 5 of 11 (45%) -- `python explore_tags.py Q cashandcash`
 - **thin** Q `LongTermDebt`: 5 of 11 (45%) -- `python explore_tags.py Q longtermdebt borrowings notespayable`
-- **MISSING** QLYS `DividendsPerShare`: 0 of 62 (0%) -- `python explore_tags.py QLYS dividendspershare`
 - **MISSING** QLYS `LongTermDebt`: 0 of 62 (0%) -- `python explore_tags.py QLYS longtermdebt borrowings notespayable`
+- **MISSING** QLYS `DividendsPerShare`: 0 of 62 (0%) -- `python explore_tags.py QLYS dividendspershare`
 - **thin** RBA `StockRepurchased`: 15 of 50 (30%) -- `python explore_tags.py RBA repurchase treasurystock buyback`
 - **thin** RBA `DividendsPerShare`: 17 of 50 (34%) -- `python explore_tags.py RBA dividendspershare`
 - **MISSING** RBLX `DividendsPerShare`: 0 of 29 (0%) -- `python explore_tags.py RBLX dividendspershare`
 - **thin** RBLX `StockRepurchased`: 3 of 29 (10%) -- `python explore_tags.py RBLX repurchase treasurystock buyback`
 - **MISSING** RBRK `StockRepurchased`: 0 of 16 (0%) -- `python explore_tags.py RBRK repurchase treasurystock buyback`
 - **MISSING** RBRK `DividendsPerShare`: 0 of 16 (0%) -- `python explore_tags.py RBRK dividendspershare`
-- **MISSING** RDDT `DividendsPerShare`: 0 of 17 (0%) -- `python explore_tags.py RDDT dividendspershare`
 - **MISSING** RDDT `LongTermDebt`: 0 of 17 (0%) -- `python explore_tags.py RDDT longtermdebt borrowings notespayable`
+- **MISSING** RDDT `DividendsPerShare`: 0 of 17 (0%) -- `python explore_tags.py RDDT dividendspershare`
 - **thin** RDDT `StockRepurchased`: 6 of 17 (35%) -- `python explore_tags.py RDDT repurchase treasurystock buyback`
 - **MISSING** RGTI `StockRepurchased`: 0 of 26 (0%) -- `python explore_tags.py RGTI repurchase treasurystock buyback`
 - **MISSING** RGTI `DividendsPerShare`: 0 of 26 (0%) -- `python explore_tags.py RGTI dividendspershare`
@@ -939,22 +937,22 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** SAIL `LongTermDebt`: 5 of 12 (42%) -- `python explore_tags.py SAIL longtermdebt borrowings notespayable`
 - **MISSING** SANM `DividendsPerShare`: 0 of 69 (0%) -- `python explore_tags.py SANM dividendspershare`
 - **thin** SANM `Goodwill`: 11 of 69 (16%) -- `python explore_tags.py SANM goodwill intangible`
-- **MISSING** SHOP `PretaxIncome`: 0 of 22 (0%)
-- **MISSING** SHOP `DividendsPerShare`: 0 of 22 (0%) -- `python explore_tags.py SHOP dividendspershare`
-- **thin** SHOP `StockRepurchased`: 4 of 22 (18%) -- `python explore_tags.py SHOP repurchase treasurystock buyback`
-- **thin** SHOP `Capex`: 10 of 22 (45%) -- `python explore_tags.py SHOP propertyplant productiveassets`
-- **thin** SHOP `DepreciationAndAmortization`: 10 of 22 (45%) -- `python explore_tags.py SHOP depreciation amortization`
-- **thin** SHOP `IncomeTaxExpense`: 10 of 22 (45%)
-- **thin** SHOP `LongTermDebt`: 10 of 22 (45%) -- `python explore_tags.py SHOP longtermdebt borrowings notespayable`
-- **thin** SHOP `NetIncomeLoss`: 10 of 22 (45%) -- `python explore_tags.py SHOP netincome`
-- **thin** SHOP `OperatingCashFlow`: 10 of 22 (45%) -- `python explore_tags.py SHOP operatingactivities`
-- **thin** SHOP `OperatingIncomeLoss`: 10 of 22 (45%) -- `python explore_tags.py SHOP operatingincome`
-- **thin** SHOP `Revenue`: 10 of 22 (45%) -- `python explore_tags.py SHOP revenue salesrevenue`
-- **thin** SHOP `ShareBasedCompensation`: 10 of 22 (45%)
-- **thin** SHOP `StockIssued`: 10 of 22 (45%) -- `python explore_tags.py SHOP issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **MISSING** SITM `CashAndEquivalents`: 0 of 34 (0%) -- `python explore_tags.py SITM cashandcash`
+- **MISSING** SHOP `PretaxIncome`: 0 of 23 (0%)
+- **MISSING** SHOP `DividendsPerShare`: 0 of 23 (0%) -- `python explore_tags.py SHOP dividendspershare`
+- **thin** SHOP `StockRepurchased`: 6 of 23 (26%) -- `python explore_tags.py SHOP repurchase treasurystock buyback`
+- **thin** SHOP `LongTermDebt`: 10 of 23 (43%) -- `python explore_tags.py SHOP longtermdebt borrowings notespayable`
+- **thin** SHOP `Capex`: 11 of 23 (48%) -- `python explore_tags.py SHOP propertyplant productiveassets`
+- **thin** SHOP `DepreciationAndAmortization`: 11 of 23 (48%) -- `python explore_tags.py SHOP depreciation amortization`
+- **thin** SHOP `IncomeTaxExpense`: 11 of 23 (48%)
+- **thin** SHOP `NetIncomeLoss`: 11 of 23 (48%) -- `python explore_tags.py SHOP netincome`
+- **thin** SHOP `OperatingCashFlow`: 11 of 23 (48%) -- `python explore_tags.py SHOP operatingactivities`
+- **thin** SHOP `OperatingIncomeLoss`: 11 of 23 (48%) -- `python explore_tags.py SHOP operatingincome`
+- **thin** SHOP `Revenue`: 11 of 23 (48%) -- `python explore_tags.py SHOP revenue salesrevenue`
+- **thin** SHOP `ShareBasedCompensation`: 11 of 23 (48%)
+- **thin** SHOP `StockIssued`: 11 of 23 (48%) -- `python explore_tags.py SHOP issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** SITM `StockRepurchased`: 0 of 34 (0%) -- `python explore_tags.py SITM repurchase treasurystock buyback`
 - **MISSING** SITM `DividendsPerShare`: 0 of 34 (0%) -- `python explore_tags.py SITM dividendspershare`
+- **MISSING** SITM `CashAndEquivalents`: 0 of 34 (0%) -- `python explore_tags.py SITM cashandcash`
 - **thin** SITM `LongTermDebt`: 2 of 34 (6%) -- `python explore_tags.py SITM longtermdebt borrowings notespayable`
 - **thin** SITM `Goodwill`: 12 of 34 (35%) -- `python explore_tags.py SITM goodwill intangible`
 - **MISSING** SLAB `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py SLAB dividendspershare`
@@ -978,8 +976,8 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** SWKS `LongTermDebt`: 33 of 72 (46%) -- `python explore_tags.py SWKS longtermdebt borrowings notespayable`
 - **MISSING** TDY `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py TDY dividendspershare`
 - **MISSING** TEAM `DividendsPerShare`: 0 of 22 (0%) -- `python explore_tags.py TEAM dividendspershare`
-- **thin** TOST `DividendsPerShare`: 2 of 27 (7%) -- `python explore_tags.py TOST dividendspershare`
-- **thin** TOST `LongTermDebt`: 3 of 27 (11%) -- `python explore_tags.py TOST longtermdebt borrowings notespayable`
+- **thin** TOST `DividendsPerShare`: 2 of 28 (7%) -- `python explore_tags.py TOST dividendspershare`
+- **thin** TOST `LongTermDebt`: 3 of 28 (11%) -- `python explore_tags.py TOST longtermdebt borrowings notespayable`
 - **MISSING** TRMB `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py TRMB dividendspershare`
 - **MISSING** TROW `LongTermDebt`: 0 of 76 (0%) -- `python explore_tags.py TROW longtermdebt borrowings notespayable`
 - **MISSING** TTAN `StockRepurchased`: 0 of 16 (0%) -- `python explore_tags.py TTAN repurchase treasurystock buyback`
@@ -1006,11 +1004,11 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **thin** WDAY `SharesOutstanding`: 28 of 64 (44%) -- `python explore_tags.py WDAY sharesoutstanding`
 - **thin** WDC `DividendsPerShare`: 29 of 75 (39%) -- `python explore_tags.py WDC dividendspershare`
 - **MISSING** WEX `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py WEX dividendspershare`
-- **MISSING** XYZ `DividendsPerShare`: 0 of 48 (0%) -- `python explore_tags.py XYZ dividendspershare`
-- **thin** XYZ `StockRepurchased`: 14 of 48 (29%) -- `python explore_tags.py XYZ repurchase treasurystock buyback`
+- **MISSING** XYZ `DividendsPerShare`: 0 of 49 (0%) -- `python explore_tags.py XYZ dividendspershare`
+- **thin** XYZ `StockRepurchased`: 15 of 49 (31%) -- `python explore_tags.py XYZ repurchase treasurystock buyback`
 - **MISSING** Z `DividendsPerShare`: 0 of 52 (0%) -- `python explore_tags.py Z dividendspershare`
 - **thin** Z `StockRepurchased`: 22 of 52 (42%) -- `python explore_tags.py Z repurchase treasurystock buyback`
-- **MISSING** ZBRA `DividendsPerShare`: 0 of 71 (0%) -- `python explore_tags.py ZBRA dividendspershare`
+- **MISSING** ZBRA `DividendsPerShare`: 0 of 72 (0%) -- `python explore_tags.py ZBRA dividendspershare`
 - **MISSING** ZETA `DividendsPerShare`: 0 of 28 (0%) -- `python explore_tags.py ZETA dividendspershare`
 - **MISSING** ZM `DividendsPerShare`: 0 of 36 (0%) -- `python explore_tags.py ZM dividendspershare`
 - **thin** ZM `LongTermDebt`: 4 of 36 (11%) -- `python explore_tags.py ZM longtermdebt borrowings notespayable`
@@ -1033,11 +1031,11 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** AEP `ShareBasedCompensation`: 0 of 74 (0%)
 - **thin** AEP `DividendsPerShare`: 10 of 74 (14%) -- `python explore_tags.py AEP dividendspershare`
 - **thin** AEP `Capex`: 35 of 74 (47%) -- `python explore_tags.py AEP propertyplant productiveassets`
-- **MISSING** AES `LongTermDebt`: 0 of 76 (0%) -- `python explore_tags.py AES longtermdebt borrowings notespayable`
-- **MISSING** AES `ShareBasedCompensation`: 0 of 76 (0%)
-- **MISSING** AES `OperatingIncomeLoss`: 0 of 76 (0%) -- `python explore_tags.py AES operatingincome`
-- **thin** AES `StockIssued`: 8 of 76 (11%) -- `python explore_tags.py AES issuanceofcommon stockissuedduringperiodvalue saleofequity`
-- **thin** AES `StockRepurchased`: 30 of 76 (39%) -- `python explore_tags.py AES repurchase treasurystock buyback`
+- **MISSING** AES `OperatingIncomeLoss`: 0 of 77 (0%) -- `python explore_tags.py AES operatingincome`
+- **MISSING** AES `LongTermDebt`: 0 of 77 (0%) -- `python explore_tags.py AES longtermdebt borrowings notespayable`
+- **MISSING** AES `ShareBasedCompensation`: 0 of 77 (0%)
+- **thin** AES `StockIssued`: 8 of 77 (10%) -- `python explore_tags.py AES issuanceofcommon stockissuedduringperiodvalue saleofequity`
+- **thin** AES `StockRepurchased`: 30 of 77 (39%) -- `python explore_tags.py AES repurchase treasurystock buyback`
 - **MISSING** ATO `ShareBasedCompensation`: 0 of 71 (0%)
 - **thin** ATO `StockRepurchased`: 12 of 71 (17%) -- `python explore_tags.py ATO repurchase treasurystock buyback`
 - **thin** AWK `ShareBasedCompensation`: 19 of 72 (26%)
@@ -1075,19 +1073,19 @@ No CIK in `company_tickers.json` and no `CIK_OVERRIDES` entry, so no EDGAR data 
 - **MISSING** LNT `StockRepurchased`: 0 of 70 (0%) -- `python explore_tags.py LNT repurchase treasurystock buyback`
 - **MISSING** LNT `Goodwill`: 0 of 70 (0%) -- `python explore_tags.py LNT goodwill intangible`
 - **thin** LNT `Capex`: 30 of 70 (43%) -- `python explore_tags.py LNT propertyplant productiveassets`
-- **MISSING** NEE `ShareBasedCompensation`: 0 of 74 (0%)
 - **MISSING** NEE `Capex`: 0 of 74 (0%) -- `python explore_tags.py NEE propertyplant productiveassets`
+- **MISSING** NEE `ShareBasedCompensation`: 0 of 74 (0%)
 - **thin** NEE `StockRepurchased`: 12 of 74 (16%) -- `python explore_tags.py NEE repurchase treasurystock buyback`
 - **thin** NI `ShareBasedCompensation`: 29 of 72 (40%)
-- **MISSING** PCG `DepreciationAndAmortization`: 0 of 75 (0%) -- `python explore_tags.py PCG depreciation amortization`
 - **MISSING** PCG `Goodwill`: 0 of 75 (0%) -- `python explore_tags.py PCG goodwill intangible`
+- **MISSING** PCG `DepreciationAndAmortization`: 0 of 75 (0%) -- `python explore_tags.py PCG depreciation amortization`
 - **thin** PCG `StockRepurchased`: 1 of 75 (1%) -- `python explore_tags.py PCG repurchase treasurystock buyback`
 - **thin** PCG `ShareBasedCompensation`: 29 of 75 (39%)
 - **thin** PCG `DividendsPerShare`: 36 of 75 (48%) -- `python explore_tags.py PCG dividendspershare`
 - **MISSING** PEG `StockIssued`: 0 of 75 (0%) -- `python explore_tags.py PEG issuanceofcommon stockissuedduringperiodvalue saleofequity`
 - **MISSING** PEG `ShareBasedCompensation`: 0 of 75 (0%)
 - **thin** PEG `StockRepurchased`: 12 of 75 (16%) -- `python explore_tags.py PEG repurchase treasurystock buyback`
-- **MISSING** PNW `Goodwill`: 0 of 71 (0%) -- `python explore_tags.py PNW goodwill intangible`
+- **MISSING** PNW `Goodwill`: 0 of 72 (0%) -- `python explore_tags.py PNW goodwill intangible`
 - **thin** PPL `StockRepurchased`: 9 of 75 (12%) -- `python explore_tags.py PPL repurchase treasurystock buyback`
 - **thin** SO `StockRepurchased`: 17 of 72 (24%) -- `python explore_tags.py SO repurchase treasurystock buyback`
 - **MISSING** SRE `OperatingIncomeLoss`: 0 of 68 (0%) -- `python explore_tags.py SRE operatingincome`
