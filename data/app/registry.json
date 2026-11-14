@@ -1,6 +1,6 @@
 {
  "schema": 2,
- "generated_at": "2026-11-13T11:28:21",
+ "generated_at": "2026-11-14T10:55:08",
  "language_primary": "en",
  "default_profile": "standard",
  "charts": {
@@ -3654,7 +3654,6 @@
   "KMI": "energy",
   "KO": "consumer_staples",
   "KR": "consumer_staples",
-  "KVUE": "consumer_staples",
   "L": "insurance_pc",
   "LDOS": "industrials",
   "LEN": "homebuilder",
