@@ -1,7 +1,7 @@
 {
   "schema": 4,
-  "run_start": "2026-11-20T11:57:26",
-  "exported_at": "2026-11-20T12:11:18",
+  "run_start": "2026-11-21T11:29:20",
+  "exported_at": "2026-11-21T11:43:47",
   "period": "quarterly",
   "tickers_requested": 610,
   "tickers_with_data": 603,
@@ -15,11 +15,11 @@
     "WBD"
   ],
   "rows": {
-    "metrics_long.parquet": 578350,
-    "valuation_history.parquet": 356233,
-    "facts_growth.parquet": 675678,
-    "facts_full.parquet": 1166095,
-    "current_snapshot.parquet": 24897,
+    "metrics_long.parquet": 578400,
+    "valuation_history.parquet": 356263,
+    "facts_growth.parquet": 675738,
+    "facts_full.parquet": 1166197,
+    "current_snapshot.parquet": 24896,
     "universe.parquet": 603
   },
   "registry": {
@@ -38,7 +38,7 @@
     "directory": "tickers",
     "tickers": 603,
     "files": 1206,
-    "bytes": 195864848,
+    "bytes": 195881875,
     "core_frames": [
       "metrics_long",
       "valuation_history",
